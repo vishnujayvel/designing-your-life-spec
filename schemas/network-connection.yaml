@@ -1,0 +1,584 @@
+# Network Connection Schema
+# Track professional network with relationship strength for DYL methodology
+# Critical insight: 80% of jobs are found through networking, especially "weak ties"
+
+NetworkConnection:
+  type: object
+  description: |
+    A professional or personal connection in the user's network.
+
+    ## DYL Methodology Context
+
+    The DYL approach emphasizes that most opportunities (especially jobs) come
+    through people, not applications. The "Hidden Job Market" is accessed through
+    networking, particularly through "weak ties" - acquaintances rather than
+    close friends.
+
+    ## Weak Ties Theory (Granovetter)
+
+    Counterintuitively, weak ties are MORE valuable for job searches than strong ties:
+    - Strong ties (close friends) know the same people and opportunities you do
+    - Weak ties (acquaintances) bridge different social networks
+    - Weak ties expose you to NEW information and opportunities
+
+    ## Metrics Focus
+
+    Success metric should be "Conversations Started" (active prototyping)
+    NOT "Applications Sent" (passive black hole risk).
+
+  required:
+    - id
+    - name
+    - relationship_strength
+    - created_at
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier
+
+    name:
+      type: string
+      minLength: 2
+      maxLength: 100
+      description: Full name of the connection
+      example: "Sarah Chen"
+
+    relationship_strength:
+      type: string
+      description: |
+        Strength of the relationship. Counterintuitively for job searches,
+        WEAK ties are often most valuable as they bridge to new networks.
+
+        ## Granovetter's Weak Ties Theory
+
+        Weak ties are MORE valuable for job searches because:
+        - Strong ties know the same people and opportunities you do
+        - Weak ties bridge different social networks
+        - Weak ties expose you to NEW information and opportunities
+
+      oneOf:
+        - const: strong
+          title: Strong
+          description: |
+            Close friend with frequent contact and mutual support.
+            Characteristics:
+            - Talk at least monthly, often weekly
+            - Would help you without being asked
+            - Shares your social network
+            Examples:
+            - Close colleague you work with daily
+            - Best friend from college
+            - Family member
+            Job search insight: Good for emotional support, but LIMITED
+            for job leads (they know the same opportunities you do).
+        - const: weak
+          title: Weak
+          description: |
+            Acquaintance with occasional contact, different network.
+            Characteristics:
+            - Talk a few times a year
+            - Friendly but not close
+            - Moves in different circles than you
+            Examples:
+            - Former colleague from 3 jobs ago
+            - Friend of a friend you met at a party
+            - Alumni you connected with once at an event
+            Job search insight: HIGHEST VALUE for job leads.
+            They bridge to networks you don't have access to.
+        - const: dormant
+          title: Dormant
+          description: |
+            Haven't contacted in 6+ months but relationship exists.
+            Characteristics:
+            - Used to be closer
+            - Would recognize you and be friendly
+            - Just haven't been in touch
+            Examples:
+            - College friend you lost touch with
+            - Former manager from years ago
+            - Ex-colleague after you both changed jobs
+            Job search insight: REACTIVATION GOLDMINE.
+            These are warm leads that just need rekindling.
+        - const: new
+          title: New
+          description: |
+            Just met, relationship not yet established.
+            Characteristics:
+            - Met within the last month
+            - Haven't had meaningful follow-up
+            - Relationship is undefined
+            Examples:
+            - Met at a networking event yesterday
+            - Connected on LinkedIn but never talked
+            - Friend-of-friend just introduced
+            Next step: Schedule a conversation to develop the relationship.
+      example: "weak"
+
+    connection_source:
+      type: string
+      enum:
+        - colleague         # Current/former coworker
+        - alumni            # School/university connection
+        - industry_event    # Met at conference, meetup, etc.
+        - online            # LinkedIn, Twitter, etc.
+        - referral          # Introduced by someone else
+        - community         # Volunteer, hobby, religious, etc.
+        - family_friend     # Extended personal network
+        - other
+      description: How you originally connected
+
+    industry:
+      type: string
+      maxLength: 100
+      description: Primary industry they work in
+      example: "Technology - Cloud Infrastructure"
+
+    company:
+      type: string
+      maxLength: 100
+      description: Current company (if known)
+      example: "Hooli"
+
+    role:
+      type: string
+      maxLength: 100
+      description: Current role/title (if known)
+      example: "Principal Engineer"
+
+    industry_relevance:
+      type: string
+      enum:
+        - direct_target     # Works in target industry/company
+        - adjacent          # Related industry, might have connections
+        - bridge            # Different industry but knows people
+        - low               # Unlikely to help with current campaign
+      description: |
+        How relevant is this connection to current campaign goals?
+        Should be updated as campaign focus changes.
+      example: "direct_target"
+
+    last_contact_date:
+      type: string
+      format: date
+      description: |
+        When you last had meaningful contact.
+        Used to identify dormant connections worth reactivating.
+      example: "2024-11-15"
+
+    contact_frequency:
+      type: string
+      enum:
+        - weekly        # Talk at least weekly
+        - monthly       # Talk at least monthly
+        - quarterly     # Talk a few times a year
+        - annually      # Once a year or so
+        - sporadic      # No pattern, as-needed
+        - lapsed        # Used to talk, haven't in a while
+      description: How often you typically communicate
+
+    relationship_context:
+      type: string
+      maxLength: 300
+      description: |
+        Brief context about the relationship.
+        Helps remember specifics before reaching out.
+      example: "Worked together on the data platform team at Hooli. She mentored me on system design. Left for Pied Piper in 2023."
+
+    can_help_with:
+      type: array
+      items:
+        type: string
+        enum:
+          - job_referral          # Can refer to open positions
+          - informational_interview  # Willing to share career advice
+          - industry_insights     # Has knowledge of target space
+          - skill_feedback        # Can review work/provide technical feedback
+          - introductions         # Knows others who might help
+          - mentorship            # Ongoing guidance relationship
+          - collaboration         # Potential project partner
+      description: Ways this connection might help
+
+    outreach_status:
+      type: string
+      enum:
+        - not_contacted     # Haven't reached out yet
+        - planning          # Drafting outreach
+        - awaiting_response # Reached out, waiting to hear back
+        - scheduled         # Conversation scheduled
+        - completed         # Had a conversation
+        - follow_up_needed  # Conversation done, need to follow up
+        - ongoing           # Active ongoing dialogue
+      description: Current outreach status
+
+    # ============================================
+    # Actionability Fields (ChatGPT Recommendation)
+    # ============================================
+
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: |
+        Outreach priority for this connection (1 = highest, 5 = lowest).
+        Based on: industry_relevance, relationship_strength, can_help_with.
+        AI should help calculate and update this based on context.
+      example: 2
+
+    next_action:
+      type: string
+      description: |
+        The specific next action to take with this connection.
+        Drives the "what should I do next?" workflow.
+
+        ## Key Principle
+
+        Always have a defined next action. Undefined = forgotten.
+
+      oneOf:
+        - const: reach_out
+          title: Reach Out
+          description: |
+            Initial outreach needed - haven't contacted yet.
+            Examples:
+            - Draft and send initial LinkedIn message
+            - Email to reconnect with dormant contact
+            - Text to schedule a coffee chat
+            Template: Reference shared context, express curiosity, propose light ask.
+        - const: follow_up
+          title: Follow Up
+          description: |
+            Follow up on previous conversation or outreach.
+            Examples:
+            - Check in after they said they'd share a contact
+            - Follow up on job they mentioned was opening
+            - Ping after no response to initial outreach
+            Timing: Wait 5-7 days after initial outreach before follow-up.
+        - const: schedule
+          title: Schedule
+          description: |
+            Coordinate a meeting time with them.
+            Examples:
+            - They agreed to talk, now find a time
+            - Suggest 3 specific time slots
+            - Use Calendly or similar if available
+            Tip: Offer specific options, don't ask "when are you free?"
+        - const: prepare
+          title: Prepare
+          description: |
+            Prepare for upcoming scheduled conversation.
+            Examples:
+            - Research their background and current role
+            - Draft 3-5 questions to ask
+            - Review notes from previous conversations
+            Minimum prep: Know their current company, role, and one conversation topic.
+        - const: send_thanks
+          title: Send Thanks
+          description: |
+            Send thank you note after a conversation.
+            Examples:
+            - Email thanking for their time and insights
+            - Note with one specific thing you learned
+            - LinkedIn message with update if they referred you
+            Timing: Send within 24 hours while conversation is fresh.
+        - const: provide_value
+          title: Provide Value
+          description: |
+            Share something helpful with them. Give before asking.
+            Examples:
+            - Forward an article relevant to their work
+            - Introduce them to someone in your network
+            - Share a job posting they might know someone for
+            Key insight: Providing value keeps relationships warm without asking.
+        - const: maintain
+          title: Maintain
+          description: |
+            Keep relationship warm, no immediate action needed.
+            Examples:
+            - Recently caught up, no follow-up needed
+            - Will reach out again in a few months
+            - Relationship is active with no specific ask
+            Tip: Set a calendar reminder to check in quarterly.
+        - const: pause
+          title: Pause
+          description: |
+            Not acting on this connection right now.
+            Examples:
+            - Not relevant to current campaign
+            - Already have enough conversations in progress
+            - Waiting for circumstances to change
+            Important: Document why paused so you remember later.
+      example: "reach_out"
+
+    next_action_due_date:
+      type: string
+      format: date
+      description: |
+        When should the next action be completed?
+        Creates accountability and prevents connections going cold.
+      example: "2025-01-15"
+
+    next_action_reason:
+      type: string
+      maxLength: 200
+      description: |
+        Why this action, why now?
+        Provides context when reviewing your action list.
+      example: "She mentioned new headcount opening up in January - check in after holidays"
+
+    bridge_value:
+      type: string
+      maxLength: 300
+      description: |
+        What unique access or information does this connection provide?
+        Especially valuable for weak ties who bridge to new networks.
+      example: "Only connection at Pinterest. Knows their ML infrastructure team well."
+
+    conversation_count:
+      type: integer
+      minimum: 0
+      default: 0
+      description: |
+        Number of meaningful conversations in current campaign.
+        Key metric: "Conversations Started" > "Applications Sent"
+
+    last_conversation:
+      type: object
+      description: Details of most recent conversation
+      properties:
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [coffee_chat, phone_call, video_call, email_exchange, in_person, event]
+        key_insights:
+          type: array
+          items:
+            type: string
+          description: What did you learn?
+        follow_up_items:
+          type: array
+          items:
+            type: string
+          description: Action items from the conversation
+        energy_impact:
+          type: integer
+          minimum: -5
+          maximum: 5
+          description: Was this conversation energizing (+) or draining (-)?
+
+    prototype_ids:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: |
+        Prototypes involving this connection.
+        Informational interviews, coffee chats = prototypes.
+
+    notes:
+      type: string
+      maxLength: 1000
+      description: Additional context or reminders
+
+    tags:
+      type: array
+      items:
+        type: string
+      description: Custom tags for filtering
+      example: ["hooli-cloud", "system-design", "former-hooli"]
+
+    linkedin_url:
+      type: string
+      format: uri
+      description: LinkedIn profile URL
+
+    email:
+      type: string
+      format: email
+      description: Contact email if known
+
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+    updated_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+  x-ai-instructions: |
+    When providing networking recommendations:
+    1. PRIORITIZE weak ties over strong ties - they bridge to new networks
+    2. Identify dormant connections in target industries for reactivation
+    3. Track "Conversations Started" as primary success metric
+    4. Encourage "Curiosity Conversations" (prototypes) not job asks
+    5. Warn if user is only sending applications (black hole risk)
+    6. Suggest: "Who in your network works at [target company]?"
+    7. For weak ties: "What would be a natural reason to reconnect?"
+
+    Priority calculation guidance:
+    - Priority 1: direct_target + weak tie + has job_referral capability
+    - Priority 2: direct_target + dormant (reactivation candidate)
+    - Priority 3: adjacent industry + can make introductions
+    - Priority 4: bridge connections who know target companies
+    - Priority 5: low relevance or maintain-only relationships
+
+    Always maintain next_action and next_action_due_date:
+    - After each conversation, immediately set next follow-up
+    - Flag connections where next_action_due_date has passed
+
+  x-ai-examples:
+    - scenario: "User wants to break into AI/ML at a FAANG company"
+      high_priority_connection:
+        name: "Sarah Chen"
+        relationship_strength: "weak"
+        industry_relevance: "direct_target"
+        company: "Hooli XYZ"
+        priority: 1
+        next_action: "reach_out"
+        next_action_reason: "Weak tie at target company - highest value for job search"
+        bridge_value: "Only connection at Hooli XYZ, knows hiring manager for ML platform team"
+        outreach_suggestion: "Reference her recent paper on efficiency in transformers as conversation starter"
+
+    - scenario: "User needs to reactivate dormant network"
+      dormant_reactivation:
+        name: "Mike Johnson"
+        relationship_strength: "dormant"
+        last_contact_date: "2023-06-15"
+        industry_relevance: "adjacent"
+        priority: 2
+        next_action: "reach_out"
+        next_action_reason: "Former colleague, now at adjacent industry. Good bridge potential."
+        reactivation_approach: |
+          1. Acknowledge time gap naturally: "It's been a while since we caught up..."
+          2. Reference shared history: "I still remember our work on X project"
+          3. Express genuine curiosity about his journey
+          4. DON'T mention job search in first message
+
+NetworkConnectionMetrics:
+  type: object
+  description: |
+    Aggregated metrics for network health and activity.
+    Shifts focus from "Applications Sent" to "Conversations Started".
+  properties:
+    total_connections:
+      type: integer
+      description: Total connections in network
+
+    by_strength:
+      type: object
+      properties:
+        strong:
+          type: integer
+        weak:
+          type: integer
+        dormant:
+          type: integer
+        new:
+          type: integer
+
+    by_relevance:
+      type: object
+      properties:
+        direct_target:
+          type: integer
+        adjacent:
+          type: integer
+        bridge:
+          type: integer
+        low:
+          type: integer
+
+    conversations_this_week:
+      type: integer
+      description: Primary success metric
+
+    conversations_this_month:
+      type: integer
+
+    dormant_reactivation_candidates:
+      type: integer
+      description: |
+        Number of dormant connections that are industry-relevant.
+        High-value outreach targets.
+
+    pending_follow_ups:
+      type: integer
+      description: Conversations that need follow-up action
+
+    network_health_score:
+      type: integer
+      minimum: 0
+      maximum: 100
+      description: |
+        Composite score based on:
+        - Recent conversation activity
+        - Balance of tie strengths
+        - Follow-up completion rate
+        - Dormant reactivation rate
+
+  x-ai-instructions: |
+    Use metrics to guide coaching:
+    - Low conversations_this_week? "Let's identify 3 people to reach out to"
+    - High dormant_reactivation_candidates? "You have untapped network potential"
+    - Many pending_follow_ups? "Some conversations need closure"
+    - Low network_health_score? "Time to invest in relationship building"
+
+    Weekly check-in prompt:
+    1. How many conversations did you have this week? (target: 3-5)
+    2. Any follow-ups overdue?
+    3. Who should you reach out to next week?
+
+  x-ai-examples:
+    - scenario: "Weekly networking review"
+      metrics:
+        conversations_this_week: 1
+        pending_follow_ups: 4
+        dormant_reactivation_candidates: 12
+      coaching_response: |
+        Your networking this week was light (1 conversation vs. target of 3-5).
+        I notice you have 4 pending follow-ups - let's close those loops first.
+        You also have 12 dormant connections in relevant industries - gold mine!
+
+        Suggested priorities this week:
+        1. Send follow-ups to your 4 pending conversations
+        2. Pick 2 dormant connections to reactivate
+        3. Schedule at least 2 new conversations
+
+WeakTiePrioritization:
+  type: object
+  description: |
+    Criteria for prioritizing which weak ties to reach out to.
+    Based on Granovetter's weak tie theory and DYL prototyping principles.
+  x-prioritization-factors:
+    high_priority:
+      - industry_relevance: direct_target
+      - relationship_strength: weak
+      - last_contact: recent_but_not_too_recent
+      - can_help_with: [job_referral, introductions]
+    medium_priority:
+      - industry_relevance: adjacent
+      - relationship_strength: dormant
+      - can_help_with: [informational_interview, industry_insights]
+    reactivation_candidates:
+      - relationship_strength: dormant
+      - industry_relevance: [direct_target, adjacent]
+      - relationship_context: positive_history
+  x-outreach-strategy:
+    weak_ties: |
+      For weak ties, use a natural reconnection reason:
+      - Saw their post/article
+      - Thinking about their industry
+      - Mutual connection mentioned them
+      - Relevant news about their company
+      DON'T lead with job ask - lead with curiosity.
+    dormant_reactivation: |
+      For dormant connections:
+      - Acknowledge the time gap naturally
+      - Reference shared history
+      - Express genuine interest in their update
+      - Offer value if possible
+      DON'T be transactional on first reconnection.

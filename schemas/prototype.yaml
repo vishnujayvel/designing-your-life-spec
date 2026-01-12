@@ -1,0 +1,501 @@
+# Prototype Schema
+# A small experiment designed to test a hypothesis
+
+Prototype:
+  type: object
+  description: |
+    A Prototype is a small, time-boxed experiment designed to test a
+    hypothesis. Prototypes are the heart of life design methodology -
+    they generate real-world evidence rather than speculation.
+
+    ## DYL Principles Applied
+
+    - **Bias to Action**: Prototypes must be actionable and schedulable
+    - **Failure Immunity**: "Failed" prototypes provide valuable data
+    - **Prototyping**: Small experiments, low commitment, fast learning
+    - **Reframing**: Prototype results can transform the question
+
+    ## Prototype Types (Universal)
+
+    These types work across any life domain:
+
+    | Type | Description | Example (Career) | Example (Location) |
+    |------|-------------|------------------|-------------------|
+    | conversation | Talk to someone with experience | Informational interview | Chat with residents |
+    | observation | Watch/shadow someone | Job shadowing | Visit neighborhood |
+    | immersion | Temporary experience | Contract work | Extended stay |
+    | evaluation | Formal assessment | Job interview | Trial month |
+    | micro_experiment | Test specific aspect | Try remote work for a week | Work from local cafe |
+
+    ## Lifecycle
+
+    ```
+    planned → in_progress → completed (evidence captured)
+                         → cancelled (with documented reason)
+    ```
+
+    ## Rules
+
+    - Must be time-boxed (has scheduled_for or deadline)
+    - Must link to at least one hypothesis
+    - Completed prototypes must have at least one evidence entry
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    hypothesis_id:
+      $ref: './common.yaml#/EntityId'
+      description: Primary hypothesis this prototype tests
+
+    additional_hypothesis_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      maxItems: 5
+      description: Other hypotheses this prototype may inform
+
+    # ============================================
+    # Core Content
+    # ============================================
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+      description: Short, descriptive name for the prototype
+      example: "Coffee chat with startup CTO"
+
+    description:
+      $ref: './common.yaml#/Markdown'
+      description: |
+        Detailed description of what this prototype involves,
+        what you hope to learn, and any preparation needed.
+
+    type:
+      $ref: './common.yaml#/PrototypeType'
+
+    # ============================================
+    # Contact/Context (for conversation/observation types)
+    # ============================================
+    contact:
+      type: object
+      description: Person involved in this prototype (if applicable)
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        role:
+          type: string
+          maxLength: 100
+          description: Their role/position relevant to the prototype
+        organization:
+          type: string
+          maxLength: 100
+        connection:
+          type: string
+          maxLength: 200
+          description: How you know them or found them
+        notes:
+          type: string
+          maxLength: 500
+      example:
+        name: "Sarah Chen"
+        role: "CTO at TechStartup"
+        organization: "TechStartup Inc"
+        connection: "Friend of friend, met at conference"
+
+    location:
+      type: string
+      maxLength: 200
+      description: Where the prototype takes place (if applicable)
+      example: "Video call or Their office in Seattle"
+
+    # ============================================
+    # Questions to Answer
+    # ============================================
+    questions:
+      type: array
+      items:
+        type: string
+        maxLength: 200
+      minItems: 1
+      maxItems: 10
+      description: |
+        Specific questions to explore during this prototype.
+        Having clear questions improves evidence quality.
+      example:
+        - "What does a typical day look like?"
+        - "How do decisions get made?"
+        - "What surprised you most about startup life?"
+
+    # ============================================
+    # Scheduling
+    # ============================================
+    scheduled_for:
+      $ref: './common.yaml#/Timestamp'
+      description: When this prototype is scheduled to happen
+
+    deadline:
+      $ref: './common.yaml#/DateOnly'
+      description: |
+        Latest date to complete this prototype.
+        Used for prototypes without fixed schedule.
+
+    duration_minutes:
+      type: integer
+      minimum: 5
+      maximum: 480
+      description: Expected duration in minutes
+      example: 45
+
+    # ============================================
+    # Status & Lifecycle
+    # ============================================
+    status:
+      $ref: './common.yaml#/PrototypeStatus'
+      default: "planned"
+
+    cancelled_reason:
+      type: string
+      maxLength: 500
+      description: Required if status is "cancelled"
+      example: "Contact became unavailable; will try to reschedule"
+
+    # ============================================
+    # Outcomes
+    # ============================================
+    overall_rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: |
+        Overall value of this prototype (1-5).
+        How useful was this for testing the hypothesis?
+      example: 4
+
+    energy_impact:
+      $ref: './common.yaml#/EnergyLevel'
+      description: |
+        How did this prototype affect your energy?
+        Important signal for life design decisions.
+
+    key_insight:
+      type: string
+      maxLength: 500
+      description: |
+        Single most important takeaway from this prototype.
+        Captured immediately after for accuracy.
+      example: "Startup culture is energizing but the ambiguity might stress me out"
+
+    follow_up_actions:
+      type: array
+      items:
+        type: string
+        maxLength: 200
+      maxItems: 5
+      description: Concrete next steps identified from this prototype
+      example:
+        - "Schedule second conversation with team member"
+        - "Research company funding status"
+
+    # ============================================
+    # Timestamps
+    # ============================================
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+    started_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the prototype actually began
+
+    completed_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the prototype was completed
+
+    # ============================================
+    # Relationships
+    # ============================================
+    evidence_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: IDs of evidence entries from this prototype
+
+    calendar_event_id:
+      type: string
+      maxLength: 200
+      description: |
+        External calendar event ID (Google Calendar, etc.)
+        For integration with scheduling systems.
+
+  required:
+    - id
+    - hypothesis_id
+    - title
+    - type
+    - status
+    - created_at
+    - updated_at
+
+# ============================================
+# Prototype Creation Request
+# ============================================
+
+PrototypeCreate:
+  type: object
+  description: Request body for creating a new prototype
+  properties:
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+    description:
+      $ref: './common.yaml#/Markdown'
+    type:
+      $ref: './common.yaml#/PrototypeType'
+    additional_hypothesis_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      maxItems: 5
+    contact:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        organization:
+          type: string
+        connection:
+          type: string
+        notes:
+          type: string
+    location:
+      type: string
+      maxLength: 200
+    questions:
+      type: array
+      items:
+        type: string
+      minItems: 1
+      maxItems: 10
+    scheduled_for:
+      $ref: './common.yaml#/Timestamp'
+    deadline:
+      $ref: './common.yaml#/DateOnly'
+    duration_minutes:
+      type: integer
+      minimum: 5
+      maximum: 480
+  required:
+    - title
+    - type
+    - questions
+
+# ============================================
+# Prototype Update Request
+# ============================================
+
+PrototypeUpdate:
+  type: object
+  description: Request body for updating a prototype
+  properties:
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+    description:
+      $ref: './common.yaml#/Markdown'
+    type:
+      $ref: './common.yaml#/PrototypeType'
+    contact:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        organization:
+          type: string
+        connection:
+          type: string
+        notes:
+          type: string
+    location:
+      type: string
+      maxLength: 200
+    questions:
+      type: array
+      items:
+        type: string
+      maxItems: 10
+    scheduled_for:
+      $ref: './common.yaml#/Timestamp'
+    deadline:
+      $ref: './common.yaml#/DateOnly'
+    duration_minutes:
+      type: integer
+      minimum: 5
+      maximum: 480
+    status:
+      $ref: './common.yaml#/PrototypeStatus'
+    cancelled_reason:
+      type: string
+      maxLength: 500
+    overall_rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+    energy_impact:
+      $ref: './common.yaml#/EnergyLevel'
+    key_insight:
+      type: string
+      maxLength: 500
+    follow_up_actions:
+      type: array
+      items:
+        type: string
+      maxItems: 5
+
+# ============================================
+# Prototype List Response
+# ============================================
+
+PrototypeList:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/Prototype'
+    total:
+      type: integer
+      minimum: 0
+    page:
+      type: integer
+      minimum: 1
+    page_size:
+      type: integer
+      minimum: 1
+      maximum: 100
+
+  # ============================================
+  # Prototype Examples - Tech & Restaurant
+  # ============================================
+  examples:
+    # Tech Industry Examples
+    tech_conversation_prototype:
+      summary: "Tech - Coffee Chat with Startup CTO"
+      description: "Conversation prototype to test startup hypothesis"
+      value:
+        id: "p-tech-001"
+        hypothesis_id: "h-tech-001"
+        title: "Coffee chat with Pied Piper CTO"
+        type: conversation
+        status: completed
+        description: "30-minute informational with CTO of a Series B startup to understand what daily life looks like for senior engineers."
+        questions:
+          - "What does a typical week look like for a senior engineer here?"
+          - "How do decisions get made? Who has to approve what?"
+          - "What surprised you most going from big company to startup?"
+        contact:
+          name: "Richard Hendricks"
+          role: "CTO at Pied Piper"
+          relationship: "Met at a conference last year"
+        outcome:
+          overall_rating: 4
+          energy_impact: 3
+          key_insight: "The autonomy is real, but so is the ambiguity. No one tells you what to do, which is both freeing and terrifying."
+          follow_up_actions:
+            - "Shadow their standup next week"
+            - "Ask about their on-call rotation"
+
+    tech_immersion_prototype:
+      summary: "Tech - Side Project Weekend Sprint"
+      description: "Immersion prototype testing startup-like work conditions"
+      value:
+        id: "p-tech-002"
+        hypothesis_id: "h-tech-001"
+        title: "48-hour hackathon with startup friend"
+        type: immersion
+        status: completed
+        description: "Spent a weekend building a prototype with a friend's startup team. Full immersion in startup-style work."
+        duration_days: 2
+        outcome:
+          overall_rating: 5
+          energy_impact: 4
+          key_insight: "I was exhausted but energized. The pace is intense but the ownership feeling is addictive. This might actually be what I want."
+
+    # Restaurant Industry Examples (The Bear)
+    restaurant_conversation_prototype:
+      summary: "Restaurant - Talk with Sydney About Systems (The Bear)"
+      description: "Conversation prototype about implementing fine dining systems"
+      value:
+        id: "p-bear-001"
+        hypothesis_id: "h-bear-001"
+        title: "Debrief with Sydney about mise en place changes"
+        type: conversation
+        status: completed
+        description: "Sit-down with Sydney after first week of implementing proper station organization."
+        questions:
+          - "What's working with the new prep system?"
+          - "Where are we getting pushback from the old crew?"
+          - "Is this sustainable, or are we burning people out?"
+        contact:
+          name: "Sydney Adamu"
+          role: "Sous Chef"
+          relationship: "Hired her from culinary school, she believes in the vision"
+        outcome:
+          overall_rating: 4
+          energy_impact: 2
+          key_insight: "The young cooks are picking it up fast. Richie thinks it's 'fancy bullshit' but Tina's actually doing it. Slower than I wanted but it's working."
+          follow_up_actions:
+            - "Get Tina to train the others"
+            - "Find a way to get Richie on board"
+
+    restaurant_experiment_prototype:
+      summary: "Restaurant - New Menu Item Test (The Bear)"
+      description: "Micro-experiment testing elevated technique on regulars"
+      value:
+        id: "p-bear-002"
+        hypothesis_id: "h-bear-001"
+        title: "Test handmade pasta as a special for one week"
+        type: micro_experiment
+        status: completed
+        description: "Run fresh rigatoni with braised beef as a special alongside the regular menu. Track orders, feedback, and food cost."
+        success_criteria:
+          - "Sell at least 30 portions per day"
+          - "Get positive feedback from regulars, not just new customers"
+          - "Keep food cost under 32%"
+        duration_days: 7
+        outcome:
+          overall_rating: 5
+          energy_impact: 3
+          key_insight: "Sold out by 7pm every night. Table 4 - the guys who've been coming since Mikey was alive - they said 'this is still The Beef, but better.' That's it. That's what we're going for."
+          follow_up_actions:
+            - "Add to permanent menu"
+            - "Train night crew on pasta prep"
+            - "Source better flour - Marcus has ideas"
+
+    restaurant_observation_prototype:
+      summary: "Restaurant - Observe Service Flow (The Bear)"
+      description: "Observation prototype watching front-of-house dynamics"
+      value:
+        id: "p-bear-003"
+        hypothesis_id: "h-bear-002"
+        title: "Watch Richie work the window for a full service"
+        type: observation
+        status: completed
+        description: "Instead of fighting with Richie, just observe. Watch how he handles the regulars, the chaos, the old way."
+        duration_minutes: 180
+        outcome:
+          overall_rating: 4
+          energy_impact: 1
+          key_insight: "He knows every customer's name. He knows their kids' names. He makes them feel like family. I can't teach that. I need him - not despite his resistance to change, but because he holds something I don't have."
+          follow_up_actions:
+            - "Talk to Richie about front-of-house role"
+            - "Stop trying to make him a line cook"

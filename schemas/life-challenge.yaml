@@ -1,0 +1,824 @@
+# Life Challenge Schema (Polymorphic)
+# Anchor Problems vs Gravity Problems using OpenAPI 3.1 discriminator
+# Critical DYL concept: Different problems require fundamentally different approaches
+
+# ============================================
+# Base Interface (Abstract)
+# ============================================
+
+LifeChallenge:
+  description: |
+    A life challenge that the user is facing. This is the base interface for
+    two fundamentally different problem types in DYL methodology.
+
+    ## Anchor Problems (Solvable)
+    Problems where the user is stuck on a specific solution approach.
+    The problem IS solvable, but the current framing prevents progress.
+    Resolution: Reframe and prototype alternative approaches.
+
+    ## Gravity Problems (Unchangeable)
+    Circumstances that cannot be changed - facts of nature, market conditions,
+    physical laws, etc. Fighting these wastes energy.
+    Resolution: Accept reality and navigate around it.
+
+    ## Why This Matters
+    The resolution strategies are FUNDAMENTALLY different:
+    - Anchor: "How might we reframe this to see new solutions?"
+    - Gravity: "How do we accept this and design around it?"
+
+    Treating all problems as generic leads to:
+    - Wasted effort trying to "fix" gravity problems
+    - Giving up on anchor problems that ARE solvable
+
+  # OpenAPI 3.1 polymorphism: oneOf with discriminator
+  oneOf:
+    - $ref: '#/AnchorChallenge'
+    - $ref: '#/GravityChallenge'
+
+  discriminator:
+    propertyName: challenge_type
+    mapping:
+      anchor: '#/AnchorChallenge'
+      gravity: '#/GravityChallenge'
+
+  x-ai-instructions: |
+    When a user logs a challenge, ALWAYS classify as Anchor or Gravity FIRST.
+    Do not attempt to solve before classification.
+
+    Classification procedure:
+    1. Listen to the problem statement
+    2. Ask: "Can this circumstance actually be changed?"
+    3. If uncertain, default to Anchor (more common, less harmful if wrong)
+    4. Validate classification with 2-3 probing questions
+    5. Only then proceed with appropriate resolution strategy
+
+  x-ai-examples:
+    - input: "I can't get a job because the market is terrible"
+      classification: "INVESTIGATE - could be either"
+      reasoning: "Market conditions suggest Gravity, but 'can't get a job' might be Anchor (wrong approach)"
+      questions_to_ask:
+        - "What types of roles have you been applying to?"
+        - "How many applications vs. networking conversations?"
+        - "Are there industries still hiring that match your skills?"
+
+    - input: "I'm 55 and companies only want young engineers"
+      classification: "Likely Gravity (age) + potential Anchor (assumptions)"
+      reasoning: "Age is unchangeable, but 'companies only want young' may be assumption"
+      approach: "Accept age as Gravity, but investigate if the hiring belief is Anchor"
+
+    - input: "I don't have the required 5 years of experience"
+      classification: "Anchor"
+      reasoning: "User is anchored to traditional job postings requiring experience"
+      reframe: "How might you demonstrate capability without years on resume?"
+
+# ============================================
+# Base Properties (shared by both types)
+# ============================================
+
+LifeChallengeBase:
+  type: object
+  required:
+    - id
+    - challenge_type
+    - statement
+    - life_area
+    - status
+    - created_at
+
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier
+
+    challenge_type:
+      type: string
+      enum: [anchor, gravity]
+      description: |
+        Discriminator field. Determines which resolution approach applies.
+        - anchor: Problem is solvable but user is stuck on wrong approach
+        - gravity: Problem is a fact of nature that cannot be changed
+
+    statement:
+      type: string
+      minLength: 10
+      maxLength: 500
+      description: |
+        The challenge as stated by the user.
+        Example: "I can't find a job in this economy"
+
+    life_area:
+      $ref: './common.yaml#/LifeArea'
+      description: Which life area this challenge primarily affects
+
+    secondary_areas:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+      maxItems: 2
+      description: Other life areas impacted by this challenge
+
+    status:
+      type: string
+      description: Current state of the challenge
+      oneOf:
+        - const: identified
+          title: Identified
+          description: |
+            Just logged, not yet classified as Anchor or Gravity.
+            Examples:
+            - User just mentioned the challenge
+            - Haven't asked classification questions yet
+            Next step: Determine if this is Anchor (solvable) or Gravity (unchangeable).
+        - const: classified
+          title: Classified
+          description: |
+            Anchor vs Gravity determination made.
+            Examples:
+            - Confirmed as Anchor: "Can't get a job" → stuck on one approach
+            - Confirmed as Gravity: "I'm 58" → age is unchangeable
+            Next step for Anchor: Begin reframing to find alternatives.
+            Next step for Gravity: Develop acceptance strategy.
+        - const: in_progress
+          title: In Progress
+          description: |
+            Actively being addressed with appropriate strategy.
+            For Anchor: Testing reframes and alternative approaches.
+            For Gravity: Working on acceptance and navigation.
+            Examples:
+            - Running prototypes for anchor reframes
+            - Processing emotions around gravity acceptance
+        - const: resolved
+          title: Resolved
+          description: |
+            Successfully navigated - no longer blocking.
+            For Anchor: Found alternative approach that worked.
+            For Gravity: Accepted reality and designed around it.
+            Examples:
+            - Anchor: Reframe led to new job approach that succeeded
+            - Gravity: Accepted market conditions, focused on networking
+        - const: dormant
+          title: Dormant
+          description: |
+            Not currently active but not resolved either.
+            Examples:
+            - Challenge on hold due to other priorities
+            - Seasonally irrelevant (will revisit later)
+            - Partially addressed, paused for now
+            Important: Review dormant challenges periodically.
+
+    campaign_id:
+      type: string
+      format: uuid
+      description: Link to related campaign if applicable
+
+    energy_impact:
+      type: integer
+      minimum: -10
+      maximum: 0
+      description: |
+        How much energy this challenge drains (-10 to 0).
+        Challenges are always draining; positive energy comes from resolution.
+      example: -6
+
+    initial_classification_confidence:
+      type: string
+      enum: [low, medium, high]
+      description: |
+        How confident the initial Anchor/Gravity classification is.
+        Low confidence challenges should be revisited.
+
+    misclassification_risk:
+      type: string
+      maxLength: 200
+      description: |
+        Note about why this might be misclassified.
+        E.g., "Initially thought job market was Gravity, but might be Anchor
+        (I'm applying to wrong roles)"
+
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+    updated_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+# ============================================
+# Anchor Challenge (Solvable)
+# ============================================
+
+AnchorChallenge:
+  allOf:
+    - $ref: '#/LifeChallengeBase'
+    - type: object
+      description: |
+        An Anchor Problem is a solvable challenge where the user is stuck
+        because they're anchored to a specific solution approach.
+
+        ## Key Characteristics
+        - The problem IS solvable
+        - The user has unconsciously limited solution space
+        - Often phrased as "I can't X" when X is one specific approach
+        - Resolution requires REFRAMING to see new possibilities
+
+        ## Resolution Pattern
+        1. Identify the anchor (what solution are they stuck on?)
+        2. Reframe the problem statement
+        3. Generate alternative approaches
+        4. Prototype the most promising alternatives
+
+        ## Example
+        Problem: "I can't get a job because I don't have enough experience"
+        Anchor: Must get traditional job posting that requires 5+ years
+        Reframe: "How might I demonstrate capability without traditional credentials?"
+        Prototypes: Side project, volunteer work, informational interviews
+
+      required:
+        - reframe_attempts
+      properties:
+        original_anchor:
+          type: string
+          maxLength: 300
+          description: |
+            What specific solution approach is the user stuck on?
+            The "anchor" that's preventing them from seeing alternatives.
+          example: "Must apply through official job postings only"
+
+        reframe_attempts:
+          type: array
+          items:
+            $ref: '#/ReframeAttempt'
+          minItems: 0
+          description: |
+            Attempts to reframe this challenge.
+            At least ONE successful reframe required before marking as resolved.
+          x-ai-instructions: |
+            Cannot resolve an AnchorChallenge without at least one reframe.
+            This forces cognitive engagement rather than just "closing the ticket."
+
+        prototype_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: |
+            Prototypes testing alternative approaches to this challenge.
+            Link to Prototype entities.
+
+        alternative_approaches:
+          type: array
+          items:
+            type: object
+            properties:
+              approach:
+                type: string
+                description: Description of alternative approach
+              feasibility:
+                type: string
+                enum: [unknown, low, medium, high]
+              prototype_status:
+                type: string
+                enum: [not_started, in_progress, completed, rejected]
+          description: |
+            Alternative approaches discovered through reframing.
+            Each should ideally have a prototype to test feasibility.
+
+        resolution_path:
+          type: string
+          enum:
+            - reframed_and_resolved  # Found new approach that worked
+            - reclassified_gravity    # Discovered it's actually Gravity
+            - deprioritized           # Valid but not pursuing now
+          description: How this challenge was ultimately resolved
+
+      x-ai-instructions: |
+        For Anchor Challenges:
+        1. NEVER suggest "just accept it" - that's for Gravity problems
+        2. ALWAYS start with "What specific approach are you stuck on?"
+        3. Guide reframing: "What if [constraint] wasn't true? What would you try?"
+        4. Encourage prototyping: "How could we test [alternative] cheaply?"
+        5. Validate reframes before allowing resolution
+
+      x-ai-examples:
+        - scenario: "User says: I can't get promoted without an MBA"
+          anchor_identified: "Belief that MBA is the only path to promotion"
+          reframe_prompt: "What if the MBA requirement wasn't true? What skills does promotion actually require?"
+          prototype_suggestions:
+            - "Interview 3 promoted colleagues without MBAs"
+            - "Ask manager directly what's needed for promotion"
+            - "Take on a stretch project that demonstrates leadership"
+
+        - scenario: "User says: I have to stay in this city for my spouse's job"
+          classification_check: "Is this truly Anchor or actually Gravity?"
+          questions: "Has your spouse considered remote work? Other locations with same employer?"
+          if_anchor: "Explore spouse's flexibility, alternative arrangements"
+          if_gravity: "Reclassify as GravityChallenge"
+
+# ============================================
+# Gravity Challenge (Unchangeable)
+# ============================================
+
+GravityChallenge:
+  allOf:
+    - $ref: '#/LifeChallengeBase'
+    - type: object
+      description: |
+        A Gravity Problem is a circumstance that cannot be changed -
+        like gravity itself, it's a fact of nature to work with, not against.
+
+        ## Key Characteristics
+        - The problem CANNOT be solved (it's not a problem, it's reality)
+        - Fighting it wastes energy and creates frustration
+        - Often market conditions, physical laws, regulations
+        - Resolution requires ACCEPTANCE and navigation
+
+        ## Resolution Pattern
+        1. Validate it's truly Gravity (not a misclassified Anchor)
+        2. Acknowledge the reality explicitly
+        3. Identify what IS controllable within this constraint
+        4. Design life/strategy around the constraint
+
+        ## Example
+        Problem: "The economy is bad and companies aren't hiring"
+        Validation: Is hiring actually down? (Check data)
+        If Gravity: Accept market conditions exist
+        Navigate: Focus on networking (less affected by hiring freezes),
+                  target counter-cyclical industries, build skills for recovery
+
+        ## Warning: Misclassification Risk
+        Many perceived Gravity problems are actually Anchors in disguise.
+        "No one is hiring" might be Anchor: "I'm only looking at big tech"
+
+      required:
+        - acceptance_strategy
+      properties:
+        reality_validation:
+          type: object
+          description: |
+            Evidence that this is truly Gravity (unchangeable)
+            and not a misclassified Anchor problem.
+          properties:
+            evidence:
+              type: array
+              items:
+                type: string
+              description: Facts supporting this is unchangeable
+              example:
+                - "Federal regulation requires 5+ years for this certification"
+                - "Company policy confirmed by HR - no remote work exceptions"
+            sources:
+              type: array
+              items:
+                type: string
+              description: Where the evidence came from
+            confidence:
+              type: string
+              enum: [low, medium, high]
+              description: How confident are we this is truly Gravity?
+            recheck_date:
+              type: string
+              format: date
+              description: When to re-validate (circumstances change)
+
+        acceptance_strategy:
+          type: string
+          minLength: 20
+          maxLength: 500
+          description: |
+            REQUIRED. How will the user accept and work with this reality?
+            This is NOT giving up - it's strategic navigation.
+          example: "Accept that the traditional job market is slow. Focus energy on networking and creating opportunities rather than applying to job boards."
+
+        controllable_factors:
+          type: array
+          items:
+            type: object
+            properties:
+              factor:
+                type: string
+                description: What IS within control despite the Gravity
+              action:
+                type: string
+                description: How to leverage this controllable factor
+          description: |
+            Within every Gravity constraint, there are still controllable elements.
+            Identify and focus energy here.
+          example:
+            - factor: "Who I network with"
+              action: "Reach out to 5 weak ties per week in target industries"
+            - factor: "Skills I'm building"
+              action: "Use slow market time to complete cloud certification"
+
+        emotional_processing:
+          type: object
+          description: |
+            Accepting Gravity often requires emotional work.
+            Acknowledging feelings is part of the process.
+          properties:
+            initial_feelings:
+              type: array
+              items:
+                type: string
+              example: ["frustration", "fear", "unfairness"]
+            acceptance_progress:
+              type: string
+              enum: [denial, anger, bargaining, depression, acceptance]
+              description: Loosely based on grief stages - this IS a loss
+            support_needed:
+              type: string
+              description: What support might help with acceptance?
+
+        navigation_prototypes:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: |
+            Prototypes for navigating AROUND this Gravity (not solving it).
+            Different from Anchor prototypes which test solutions.
+
+        resolution_path:
+          type: string
+          enum:
+            - accepted_and_navigating  # Truly Gravity, working around it
+            - reclassified_anchor      # Discovered it's actually solvable
+            - context_changed          # External change made it no longer Gravity
+          description: How this challenge was ultimately handled
+
+      x-ai-instructions: |
+        For Gravity Challenges:
+        1. NEVER suggest solutions - there are none for true Gravity
+        2. ALWAYS validate: "Are we sure this can't be changed?"
+        3. Guide acceptance: "What feelings come up about this reality?"
+        4. Focus on controllables: "Within this constraint, what CAN you influence?"
+        5. Watch for disguised Anchors: "Is there an assumption we haven't questioned?"
+
+        DO NOT allow solution-oriented fields like prototype_ids for Gravity problems.
+        Prototypes are for testing solutions; Gravity has no solutions.
+
+      x-ai-examples:
+        - scenario: "User says: I'm 58 and tech companies don't hire people my age"
+          gravity_element: "Age (58) - cannot be changed"
+          potential_anchor: "'Tech companies don't hire older workers' - may be assumption"
+          validation_questions:
+            - "What evidence do you have for this belief?"
+            - "Have you interviewed at companies with age-diverse teams?"
+          acceptance_guidance: "Accept age as fact. Focus on companies that value experience."
+          controllable_factors:
+            - "Which companies you target (seek mature cultures)"
+            - "How you position experience as an asset"
+            - "Network through age-peer professional groups"
+
+        - scenario: "User says: My industry is dying due to AI"
+          classification: "Likely Gravity (macro trend)"
+          validation: "Check industry reports, job posting trends"
+          if_confirmed_gravity:
+            acceptance: "Acknowledge the trend is real and out of your control"
+            navigation: "Identify transferable skills, adjacent industries growing"
+          emotional_support: "This is a loss - allow space for grief before action planning"
+
+# ============================================
+# Supporting Types
+# ============================================
+
+ReframeAttempt:
+  type: object
+  description: |
+    An attempt to reframe an Anchor Challenge to unlock new solutions.
+    Reframing changes HOW we see the problem, not the problem itself.
+  required:
+    - original_frame
+    - new_frame
+    - created_at
+  properties:
+    id:
+      type: string
+      format: uuid
+
+    original_frame:
+      type: string
+      maxLength: 300
+      description: How the problem was originally stated
+      example: "I can't find a job because I don't have 5 years experience"
+
+    new_frame:
+      type: string
+      maxLength: 300
+      description: The reframed problem statement
+      example: "How might I demonstrate my capabilities without traditional credentials?"
+
+    reframe_technique:
+      type: string
+      enum:
+        - flip_the_assumption      # "What if [X] wasn't true?"
+        - broaden_the_question     # "What are we really trying to achieve?"
+        - narrow_the_scope         # "What's the smallest version of this?"
+        - change_the_stakeholder   # "How would [person] see this?"
+        - time_shift               # "How will this look in 5 years?"
+        - resource_shift           # "What if we had unlimited [X]?"
+      description: Which reframing technique was used
+
+    effectiveness:
+      type: string
+      enum: [not_evaluated, ineffective, somewhat_helpful, breakthrough]
+      description: How helpful was this reframe?
+
+    insights_generated:
+      type: array
+      items:
+        type: string
+      description: What new possibilities did this reframe reveal?
+
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+ChallengeClassificationGuide:
+  type: object
+  description: |
+    Heuristics for classifying challenges as Anchor vs Gravity.
+    Used by AI agents to guide initial classification.
+  x-classification-rules:
+    likely_anchor:
+      - pattern: "I can't..."
+        reason: "Usually indicates stuck on one approach"
+      - pattern: "I don't know how to..."
+        reason: "Knowledge gap is addressable"
+      - pattern: "They won't let me..."
+        reason: "May be negotiable or have alternatives"
+      - pattern: "I've always done it this way..."
+        reason: "Habit, not constraint"
+      - pattern: "The only way is..."
+        reason: "Classic anchor thinking"
+
+    likely_gravity:
+      - pattern: "It's illegal/regulated..."
+        reason: "Legal constraints are usually Gravity"
+      - pattern: "Physically impossible..."
+        reason: "Laws of physics are Gravity"
+      - pattern: "I'm [age/characteristic]..."
+        reason: "Intrinsic traits often Gravity (but check assumptions!)"
+      - pattern: "Market/economy..."
+        reason: "Macro conditions often Gravity"
+      - pattern: "Policy requires..."
+        reason: "Institutional rules often Gravity (but verify!)"
+
+    requires_investigation:
+      - pattern: "Everyone says..."
+        action: "Verify - may be assumption, not reality"
+      - pattern: "It's not possible..."
+        action: "Challenge - what evidence supports this?"
+      - pattern: "I've tried everything..."
+        action: "List what was tried - often reveals limited attempts"
+
+# ============================================
+# Personalized Life Challenge Examples for Swagger UI
+# ============================================
+
+LifeChallengeExamples:
+  type: object
+  description: Realistic anchor and gravity problem examples
+  examples:
+    anchor_networking:
+      summary: "Anchor - Stuck on Job Board Strategy"
+      description: "Belief that only formal applications work, reframed to networking"
+      value:
+        id: "lc-1234-anchor-networking"
+        challenge_type: anchor
+        statement: "I can't get interviews because the job market is terrible"
+        life_area: work
+        status: in_progress
+        original_anchor: "Must apply through job boards only"
+        reframe_attempts:
+          - original_frame: "The market is terrible, no one is hiring"
+            new_frame: "How might I access opportunities that aren't on job boards?"
+            reframe_technique: flip_the_assumption
+            effectiveness: breakthrough
+            insights_generated:
+              - "80% of jobs filled through networking"
+              - "Weak ties are more valuable than close friends for job leads"
+              - "Informational interviews can lead to referrals"
+        alternative_approaches:
+          - approach: "Networking through weak ties"
+            feasibility: validated
+            prototype_status: testing
+          - approach: "Informational interviews at target companies"
+            feasibility: validated
+            prototype_status: testing
+    anchor_experience:
+      summary: "Anchor - System Design Experience Belief"
+      description: "Belief that only production experience counts, reframed"
+      value:
+        id: "lc-2345-anchor-experience"
+        challenge_type: anchor
+        statement: "I don't have enough system design experience for Staff roles"
+        life_area: work
+        status: in_progress
+        original_anchor: "Must have production system design experience"
+        reframe_attempts:
+          - original_frame: "I haven't built large-scale systems"
+            new_frame: "How can I demonstrate system design thinking even without direct experience?"
+            reframe_technique: broaden_the_question
+            effectiveness: somewhat_helpful
+            insights_generated:
+              - "Mock interviews can build the skill"
+              - "Side projects can demonstrate architectural thinking"
+              - "Previous Hooli experience is more relevant than realized"
+    gravity_market:
+      summary: "Gravity - Job Market Conditions"
+      description: "Macro-level constraint that must be accepted and navigated"
+      value:
+        id: "lc-3456-gravity-market"
+        challenge_type: gravity
+        statement: "The 2024-2025 tech job market has fewer openings than 2021"
+        life_area: work
+        status: accepted_and_navigating
+        reality_validation:
+          evidence:
+            - "Industry layoffs well-documented"
+            - "Job posting data shows 40% fewer SWE roles"
+            - "Multiple rejections not personal - volume issue"
+          confidence: high
+        acceptance_strategy: |
+          Accept that market conditions are outside my control.
+          Focus energy on controllable factors:
+          - Quality of applications over quantity
+          - Networking as primary strategy
+          - Building skills during the search
+        controllable_factors:
+          - factor: "Who I network with"
+            action: "5 weak tie outreaches per week"
+          - factor: "How I prepare for interviews"
+            action: "Daily mock interviews at 8 PM"
+          - factor: "Which companies I target"
+            action: "Focus on companies still actively hiring"
+        emotional_processing:
+          initial_feelings: ["frustration", "unfairness"]
+          acceptance_progress: acceptance
+          support_needed: "Partner support and realistic expectations"
+    gravity_adhd:
+      summary: "Gravity - ADHD Neurodivergence"
+      description: "Neurological trait that must be designed around, not fixed"
+      value:
+        id: "lc-4567-gravity-adhd"
+        challenge_type: gravity
+        statement: "My ADHD makes traditional job search approaches harder"
+        life_area: work
+        status: accepted_and_navigating
+        reality_validation:
+          evidence:
+            - "ADHD is neurological - won't change"
+            - "Executive function challenges are documented"
+          confidence: high
+        acceptance_strategy: |
+          Accept ADHD as part of who I am.
+          Design systems that work WITH my brain:
+          - Max 2 interviews per week
+          - SNL day framework for structure
+          - Movement before screens
+          - External accountability (partner, calendar)
+        controllable_factors:
+          - factor: "Environment design"
+            action: "Use tools and systems that work for ADHD brain"
+          - factor: "Scheduling constraints"
+            action: "Hard limits on interview load"
+        emotional_processing:
+          initial_feelings: ["self-criticism", "frustration"]
+          acceptance_progress: acceptance
+          support_needed: "Understanding that ADHD is a difference, not a deficit"
+
+    # ============================================
+    # Restaurant Industry Examples (The Bear)
+    # ============================================
+    restaurant_anchor_crew:
+      summary: "The Bear - Anchor: 'I Need to Replace the Crew'"
+      description: "Carmy stuck on idea that he needs to hire new staff"
+      value:
+        id: "lc-bear-001"
+        challenge_type: anchor
+        statement: "The existing crew can't handle fine dining standards - I need to start fresh"
+        life_area: work
+        status: resolved
+        original_anchor: "The Beef crew is stuck in their ways and can't learn fine dining techniques"
+        reframe_attempts:
+          - original_frame: "This crew can't do what I need them to do"
+            new_frame: "What if these people could grow into new roles if given the right training and trust?"
+            reframe_technique: flip_the_assumption
+            effectiveness: breakthrough
+            insights_generated:
+              - "Sydney is more capable than I realized - she just needed space to lead"
+              - "Tina learned mise en place faster than the new culinary school grads I interviewed"
+              - "Richie's relationship skills are irreplaceable - front of house is his domain"
+              - "Marcus has passion for pastry - he just needed someone to believe in him"
+        alternative_approaches:
+          - approach: "Invest in training existing team"
+            feasibility: high
+            prototype_status: completed
+          - approach: "Find the right role for each person"
+            feasibility: high
+            prototype_status: completed
+          - approach: "Send Marcus to Copenhagen to learn pastry"
+            feasibility: validated
+            prototype_status: completed
+        resolution_path: reframed_and_resolved
+
+    restaurant_anchor_perfection:
+      summary: "The Bear - Anchor: 'The Food Must Be Perfect'"
+      description: "Carmy stuck on perfection preventing any progress"
+      value:
+        id: "lc-bear-002"
+        challenge_type: anchor
+        statement: "I can't open until everything is perfect - every dish, every plate, every detail"
+        life_area: work
+        status: in_progress
+        original_anchor: "Everything must be at 'every' level before we can open"
+        energy_impact: -8
+        reframe_attempts:
+          - original_frame: "It's not ready until it's perfect"
+            new_frame: "What's the minimum viable restaurant that's still true to our vision?"
+            reframe_technique: narrow_the_scope
+            effectiveness: somewhat_helpful
+            insights_generated:
+              - "We can open with a smaller menu and expand"
+              - "Better to be great at 8 dishes than mediocre at 20"
+              - "Every night is a prototype - we can iterate"
+          - original_frame: "I need to control every plate"
+            new_frame: "How do I train the team so every plate reflects our standards even when I'm not touching it?"
+            reframe_technique: change_the_stakeholder
+            effectiveness: breakthrough
+            insights_generated:
+              - "Building systems is more scalable than being the system"
+              - "Sydney can expedite - I need to let her"
+
+    restaurant_gravity_mikey:
+      summary: "The Bear - Gravity: Mikey's Death"
+      description: "The irreversible loss that Carmy must navigate around"
+      value:
+        id: "lc-bear-003"
+        challenge_type: gravity
+        statement: "My brother is gone. I can't change that. The Beef was his dream, not mine."
+        life_area: love
+        secondary_areas: [work]
+        status: in_progress
+        energy_impact: -10
+        reality_validation:
+          evidence:
+            - "Death is permanent"
+            - "The debt Mikey left is real - $300k"
+            - "The expectations of the neighborhood are real"
+          confidence: high
+        acceptance_strategy: |
+          I can't bring Mikey back. I can't undo the debt.
+          What I can do:
+          - Honor what was good about The Beef
+          - Transform it into something that uses what I learned at ever
+          - Take care of the people he loved (Richie, the crew, the regulars)
+          - Make something he would be proud of
+        controllable_factors:
+          - factor: "How I honor Mikey's memory"
+            action: "Keep the soul of the place while elevating the food"
+          - factor: "How I treat the people he loved"
+            action: "Richie gets front of house. Tina gets respect. Everyone gets opportunity."
+          - factor: "What I create next"
+            action: "The Bear - fine dining that's still The Beef at heart"
+        emotional_processing:
+          initial_feelings: ["grief", "guilt", "anger", "love"]
+          acceptance_progress: depression
+          support_needed: "Therapy (Dr. Carmy). Letting people in. Admitting I'm not okay."
+
+    restaurant_gravity_neighborhood:
+      summary: "The Bear - Gravity: The Neighborhood Expects Italian Beef"
+      description: "Cultural expectations that cannot be ignored"
+      value:
+        id: "lc-bear-004"
+        challenge_type: gravity
+        statement: "This neighborhood comes to The Beef for Italian beef. That's just how it is."
+        life_area: work
+        status: accepted_and_navigating
+        reality_validation:
+          evidence:
+            - "40 years of tradition"
+            - "Regulars depend on us - not just food, but community"
+            - "Table 4 guys have been coming since Mikey was a kid"
+          confidence: high
+          recheck_date: "2025-06-01"
+        acceptance_strategy: |
+          The neighborhood is who we serve. We can't ignore that.
+          But we can expand what we offer without abandoning it.
+          Italian beef stays on the menu forever. It's non-negotiable.
+          AND we can add elevated options for people who want to try something new.
+        controllable_factors:
+          - factor: "What we add to the menu"
+            action: "Elevate, don't replace. Rigatoni special alongside Italian beef."
+          - factor: "How we honor regulars"
+            action: "Richie knows every name. That doesn't change."
+          - factor: "Speed of transformation"
+            action: "Go slow. Let people come along with us."
+        emotional_processing:
+          initial_feelings: ["frustration", "trapped"]
+          acceptance_progress: acceptance
+          support_needed: "Sydney's perspective - she helps me see it's not a constraint, it's an anchor"

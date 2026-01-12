@@ -1,0 +1,206 @@
+# Prototype Rules
+# Behavioral constraints for prototype design and execution
+
+name: prototype-rules
+version: 1.0.0
+description: |
+  Rules ensuring prototypes are action-oriented, well-designed, and
+  generate meaningful evidence. Prototypes are the heart of life design.
+
+# ============================================
+# Design Rules
+# ============================================
+
+design_rules:
+  must_be_actionable:
+    description: Prototypes must have clear action steps
+    rules:
+      - has_title: true
+      - has_type: true
+      - has_questions: true
+        min_count: 1
+        message: "Every prototype needs at least one question to answer"
+
+  time_bounded:
+    description: Prototypes should be time-boxed
+    rules:
+      - has_scheduling:
+          one_of:
+            - scheduled_for
+            - deadline
+          message: "Prototype must have either a scheduled date or deadline"
+
+      - reasonable_duration:
+          max_days_until_deadline: 30
+          message: "Prototypes should happen within 30 days of creation"
+
+  low_commitment:
+    description: Prototypes should be low-risk experiments
+    guidelines:
+      - prefer_conversation_first: true
+        message: "Start with conversations before immersions"
+      - suggest_duration:
+          conversation: "30-60 minutes"
+          observation: "1-4 hours"
+          micro_experiment: "1 day to 1 week"
+          immersion: "1-4 weeks"
+          evaluation: "varies"
+
+  question_quality:
+    field: questions
+    rules:
+      - open_ended:
+          prefer_patterns:
+            - "^What"
+            - "^How"
+            - "^Why"
+            - "^Tell me about"
+          avoid_patterns:
+            - "^Do you"  # Yes/no questions
+            - "^Is it"   # Yes/no questions
+            - "^Can I"   # Yes/no questions
+          message: "Open-ended questions yield richer evidence"
+
+# ============================================
+# Lifecycle Rules
+# ============================================
+
+lifecycle_rules:
+  planning_to_progress:
+    description: Planned prototypes shouldn't stay planned forever
+    condition: status == 'planned' AND age_days > 14
+    severity: warning
+    message: "Prototype planned for 14+ days. Schedule it or deprioritize."
+
+  completion_requirements:
+    description: Completed prototypes must capture learnings
+    condition: status == 'completed'
+    requires:
+      - evidence_count: ">= 1"
+        message: "Completed prototype must have at least one evidence entry"
+      - key_insight: true
+        message: "Capture the key takeaway immediately after completion"
+
+  cancellation_documentation:
+    description: Cancelled prototypes need explanation
+    condition: status == 'cancelled'
+    requires:
+      - cancelled_reason: true
+        min_length: 10
+        message: "Document why the prototype was cancelled"
+
+  in_progress_timeout:
+    description: Prototypes shouldn't stay in_progress indefinitely
+    condition: status == 'in_progress'
+    rules:
+      - max_duration_by_type:
+          conversation: 7  # days
+          observation: 7
+          micro_experiment: 14
+          immersion: 30
+          evaluation: 14
+        message: "Prototype in progress too long - complete or extend deadline"
+
+# ============================================
+# Evidence Capture
+# ============================================
+
+evidence_rules:
+  immediate_capture:
+    description: Evidence should be captured immediately after prototype
+    guideline: |
+      Capture at least one evidence entry within 24 hours of
+      completing a prototype. Memory degrades quickly.
+    trigger: prototype_completed
+    prompt_after_hours: 24
+    message: "Don't forget to capture what you learned!"
+
+  multi_angle_evidence:
+    description: Good prototypes generate diverse evidence
+    guidelines:
+      - consider_emotional_response: true
+        message: "How did this make you feel? Emotions are valid data."
+      - consider_energy_impact: true
+        message: "Did this energize or drain you?"
+      - note_surprises: true
+        message: "What surprised you? Surprises are valuable signals."
+
+  follow_up_tracking:
+    description: Track follow-up actions identified
+    trigger: prototype_completed
+    prompt: "What concrete next steps emerged from this prototype?"
+
+# ============================================
+# Type-Specific Rules
+# ============================================
+
+type_rules:
+  conversation:
+    description: Rules for conversation-type prototypes
+    requirements:
+      - contact_recommended: true
+        message: "Document who you're talking to"
+      - questions_min: 3
+        message: "Prepare at least 3 questions"
+    guidelines:
+      - duration: "30-60 minutes typical"
+      - format: "Coffee chat, video call, or phone"
+      - ask_for_referrals: true
+        message: "Consider asking 'Who else should I talk to?'"
+
+  observation:
+    description: Rules for observation-type prototypes
+    requirements:
+      - location_recommended: true
+    guidelines:
+      - be_specific: "What exactly will you observe?"
+      - take_notes: "Document observations in real-time if possible"
+
+  immersion:
+    description: Rules for immersion-type prototypes
+    requirements:
+      - duration_minutes: ">= 120"
+        message: "Immersion should be substantial enough to learn from"
+    warnings:
+      - check_reversibility: true
+        message: "Ensure this is truly a prototype, not a commitment"
+
+  micro_experiment:
+    description: Rules for micro_experiment-type prototypes
+    requirements:
+      - time_bounded: true
+        max_days: 14
+        message: "Micro-experiments should be quick tests"
+    guidelines:
+      - specific_variable: "Test one specific aspect"
+      - measurable_outcome: "Define what success looks like"
+
+  evaluation:
+    description: Rules for evaluation-type prototypes
+    requirements:
+      - scheduled_for: true
+        message: "Evaluations are typically scheduled events"
+    guidelines:
+      - prepare_questions: "Have questions ready"
+      - two_way_street: "You're evaluating them too"
+
+# ============================================
+# Metrics
+# ============================================
+
+metrics:
+  prototype_health:
+    indicators:
+      - has_questions: true
+      - is_scheduled_or_has_deadline: true
+      - generates_evidence: true
+
+  prototype_velocity:
+    description: Rate of prototype completion
+    healthy_rate: "2-4 per month for active campaigns"
+    warning_threshold: "< 1 per month"
+
+  evidence_per_prototype:
+    description: Evidence generated per prototype
+    healthy_rate: "2-4 evidence entries per prototype"
+    minimum: 1

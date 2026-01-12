@@ -1,0 +1,135 @@
+# Calendar Event Schema - Lightweight, Token-Efficient
+# Provider-agnostic abstraction for Google Calendar, Outlook, etc.
+
+CalendarEvent:
+  type: object
+  description: |
+    Lightweight calendar event for LLM consumption.
+    ~50-80 tokens per event vs ~200-400 for raw Google Calendar API.
+  required:
+    - id
+    - title
+    - start
+    - end
+  properties:
+    id:
+      type: string
+      description: Unique event identifier (provider's ID)
+      example: "abc123xyz"
+
+    title:
+      type: string
+      description: Event title/summary
+      example: "Technical Interview - Hooli"
+
+    description:
+      type: string
+      description: Event description/notes
+      example: "Prep call for virtual full loop interviews. Recruiter: Alan Ngo..."
+
+    start:
+      type: string
+      format: date-time
+      description: ISO 8601 start time with timezone
+      example: "2025-12-29T14:00:00-08:00"
+
+    end:
+      type: string
+      format: date-time
+      description: ISO 8601 end time with timezone
+      example: "2025-12-29T15:00:00-08:00"
+
+    location:
+      type: string
+      description: Meeting link or physical location (optional)
+      example: "zoom.us/j/123456"
+
+    status:
+      type: string
+      enum: [confirmed, tentative, cancelled]
+      default: confirmed
+      description: Event confirmation status
+
+    type:
+      type: string
+      enum: [interview, meeting, prep, social, health, focus, other]
+      description: |
+        Event category for DYL analysis. Inferred from title patterns:
+        - interview: "Interview", "Phone Screen", "Onsite"
+        - prep: "Prep", "Study", "Practice"
+        - social: "Date", "Dinner", "Hangout"
+        - health: "Gym", "Doctor", "Workout"
+        - focus: "Deep Work", "Focus Time", "Block"
+
+    all_day:
+      type: boolean
+      default: false
+      description: True for all-day events (no specific time)
+
+    attendee_count:
+      type: integer
+      minimum: 0
+      description: Number of attendees (optional, for sizing)
+      example: 3
+
+CalendarEventList:
+  type: object
+  description: List of calendar events with summary metadata
+  required:
+    - events
+    - count
+  properties:
+    events:
+      type: array
+      items:
+        $ref: '#/CalendarEvent'
+
+    count:
+      type: integer
+      description: Total number of events in list
+
+    date_range:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date
+          example: "2025-12-29"
+        end:
+          type: string
+          format: date
+          example: "2025-01-05"
+
+    by_type:
+      type: object
+      description: Count by event type for quick analysis
+      additionalProperties:
+        type: integer
+      example:
+        interview: 3
+        prep: 2
+        social: 1
+
+# Mapping from Google Calendar API to CalendarEvent
+#
+# Google Field          -> CalendarEvent Field
+# -------------------------------------------
+# id                    -> id
+# summary               -> title
+# description           -> description
+# start.dateTime        -> start
+# end.dateTime          -> end
+# location              -> location
+# status                -> status
+# start.date (no time)  -> all_day: true
+# attendees.length      -> attendee_count
+#
+# DROPPED (token savings):
+# - organizer (redundant if user is organizer)
+# - creator (rarely needed)
+# - reminders (client-side concern)
+# - recurrence (expanded by singleEvents=true)
+# - hangoutLink/conferenceData (use location)
+# - extendedProperties (custom metadata)
+# - attachments (file links)
+# - htmlLink (can construct from id)

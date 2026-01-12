@@ -1,0 +1,346 @@
+# Session Schema
+# Coaching interaction records
+
+Session:
+  type: object
+  description: |
+    A Session records a coaching interaction. Sessions track progress,
+    insights, and action items from structured check-ins.
+
+    ## DYL Principles Applied
+
+    - **Coherence**: Regular sessions maintain design momentum
+    - **Reframing**: Sessions help identify stuck points to reframe
+    - **Bias to Action**: Sessions produce concrete next steps
+
+    ## Session Types
+
+    | Type | Purpose | Typical Duration |
+    |------|---------|------------------|
+    | check_in | Regular progress review | 15-30 min |
+    | planning | Strategy and next steps | 30-60 min |
+    | reflection | Deep dive on learnings | 30-60 min |
+    | crisis | Urgent reframing | As needed |
+    | celebration | Acknowledge wins | 15-30 min |
+
+    ## Session Structure
+
+    1. **Check-in**: Current state, energy, mood
+    2. **Review**: What happened since last session
+    3. **Focus**: Deep dive on one topic
+    4. **Actions**: Concrete next steps
+    5. **Close**: Summarize and confirm commitments
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    campaign_id:
+      $ref: './common.yaml#/EntityId'
+      description: Campaign this session belongs to
+
+    # ============================================
+    # Session Details
+    # ============================================
+    type:
+      $ref: './common.yaml#/SessionType'
+
+    title:
+      type: string
+      maxLength: 200
+      description: Optional title for the session
+      example: "Week 3 Check-in: Startup Prototypes"
+
+    scheduled_for:
+      $ref: './common.yaml#/Timestamp'
+      description: When the session was/is scheduled
+
+    duration_minutes:
+      type: integer
+      minimum: 5
+      maximum: 180
+      description: Actual duration of the session
+      example: 30
+
+    # ============================================
+    # Opening State
+    # ============================================
+    opening_state:
+      type: object
+      description: State at start of session
+      properties:
+        energy:
+          $ref: './common.yaml#/EnergyLevel'
+        mood:
+          type: string
+          enum:
+            - great
+            - good
+            - okay
+            - struggling
+            - crisis
+        one_word:
+          type: string
+          maxLength: 50
+          description: One word to describe how they're feeling
+        life_balance:
+          $ref: './common.yaml#/LifeBalance'
+        notes:
+          type: string
+          maxLength: 500
+      example:
+        energy: 2
+        mood: "good"
+        one_word: "hopeful"
+
+    # ============================================
+    # Review Section
+    # ============================================
+    since_last_session:
+      type: object
+      description: What happened since the previous session
+      properties:
+        prototypes_completed:
+          type: array
+          items:
+            $ref: './common.yaml#/EntityId'
+          description: Prototypes completed since last session
+        key_events:
+          type: array
+          items:
+            type: string
+            maxLength: 200
+          maxItems: 10
+          description: Important things that happened
+        commitments_kept:
+          type: array
+          items:
+            type: object
+            properties:
+              commitment:
+                type: string
+              completed:
+                type: boolean
+              notes:
+                type: string
+          description: Review of previous action items
+
+    # ============================================
+    # Focus Area
+    # ============================================
+    focus_topic:
+      type: string
+      maxLength: 200
+      description: Main topic explored in this session
+      example: "Processing feedback from startup interviews"
+
+    focus_notes:
+      $ref: './common.yaml#/Markdown'
+      description: Detailed notes from the focus discussion
+
+    # ============================================
+    # Insights
+    # ============================================
+    insights:
+      type: array
+      items:
+        type: object
+        properties:
+          content:
+            type: string
+            maxLength: 500
+          category:
+            type: string
+            enum:
+              - self_awareness    # About oneself
+              - pattern           # Recurring pattern noticed
+              - reframe           # New way of seeing something
+              - blocker           # Obstacle identified
+              - value_clarity     # Values clarification
+              - decision_point    # Ready to decide something
+          importance:
+            type: string
+            enum: ["low", "medium", "high"]
+        required:
+          - content
+      maxItems: 10
+      description: Key insights from the session
+      example:
+        - content: "I keep avoiding reaching out to my network because of impostor syndrome"
+          category: "pattern"
+          importance: "high"
+        - content: "Remote work isn't just a preference - it's essential for my mental health"
+          category: "value_clarity"
+          importance: "high"
+
+    # ============================================
+    # Anti-Pattern Detection
+    # ============================================
+    anti_patterns_identified:
+      type: array
+      items:
+        type: object
+        properties:
+          pattern:
+            type: string
+            maxLength: 100
+            description: Which anti-pattern was detected
+          manifestation:
+            type: string
+            maxLength: 500
+            description: How it showed up
+          intervention:
+            type: string
+            maxLength: 500
+            description: What was done to address it
+        required:
+          - pattern
+          - manifestation
+      maxItems: 5
+      description: DYL anti-patterns noticed and addressed
+      example:
+        - pattern: "Analysis Paralysis"
+          manifestation: "Researching companies for weeks without reaching out"
+          intervention: "Committed to 3 informational interviews this week"
+
+    # ============================================
+    # Action Items
+    # ============================================
+    action_items:
+      type: array
+      items:
+        type: object
+        properties:
+          description:
+            type: string
+            maxLength: 200
+          deadline:
+            $ref: './common.yaml#/DateOnly'
+          priority:
+            type: string
+            enum: ["low", "medium", "high"]
+          prototype_id:
+            $ref: './common.yaml#/EntityId'
+            description: If this creates a prototype
+        required:
+          - description
+      maxItems: 10
+      description: Concrete next steps from this session
+      example:
+        - description: "Reach out to 3 startup CTOs for coffee chats"
+          deadline: "2025-01-20"
+          priority: "high"
+        - description: "Log energy for every work activity this week"
+          deadline: "2025-01-22"
+          priority: "medium"
+
+    # ============================================
+    # Closing State
+    # ============================================
+    closing_state:
+      type: object
+      description: State at end of session
+      properties:
+        energy:
+          $ref: './common.yaml#/EnergyLevel'
+        mood:
+          type: string
+          enum:
+            - great
+            - good
+            - okay
+            - struggling
+            - crisis
+        one_word:
+          type: string
+          maxLength: 50
+        clarity_rating:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: How clear are they on next steps?
+        notes:
+          type: string
+          maxLength: 500
+
+    # ============================================
+    # Session Quality
+    # ============================================
+    effectiveness_rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: How effective was this session?
+
+    session_notes:
+      $ref: './common.yaml#/Markdown'
+      description: Additional notes about the session
+
+    # ============================================
+    # Timestamps
+    # ============================================
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+    started_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the session actually started
+
+    ended_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the session ended
+
+  required:
+    - id
+    - campaign_id
+    - type
+    - created_at
+    - updated_at
+
+# ============================================
+# Session Creation Request
+# ============================================
+
+SessionCreate:
+  type: object
+  properties:
+    type:
+      $ref: './common.yaml#/SessionType'
+    title:
+      type: string
+      maxLength: 200
+    scheduled_for:
+      $ref: './common.yaml#/Timestamp'
+    opening_state:
+      type: object
+      properties:
+        energy:
+          type: integer
+          minimum: -5
+          maximum: 5
+        mood:
+          type: string
+        one_word:
+          type: string
+        life_balance:
+          type: object
+  required:
+    - type
+
+# ============================================
+# Session List Response
+# ============================================
+
+SessionList:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/Session'
+    total:
+      type: integer
+      minimum: 0

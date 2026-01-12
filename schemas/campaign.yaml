@@ -1,0 +1,477 @@
+# Campaign Schema
+# Top-level container for a life design exploration
+
+Campaign:
+  type: object
+  description: |
+    A Campaign is the top-level container for a life design exploration.
+    It represents a bounded period of experimentation around a central
+    life question or transition.
+
+    ## DYL Principles Applied
+
+    - **Wayfinding**: Campaign direction evolves based on learning
+    - **Bias to Action**: Must generate prototypes, not just hypotheses
+    - **Life Balance**: Track impact across all four life areas
+    - **Failure Immunity**: Pivots and "failed" prototypes are valid outcomes
+
+    ## Lifecycle
+
+    ```
+    active → paused (temporary) → active
+           → pivoted (direction change)
+           → completed (decision made)
+           → abandoned (stopped, requires reason)
+    ```
+
+    ## Key Constraints
+
+    - A campaign MUST have at least one hypothesis within 7 days of creation
+    - A campaign cannot be "completed" without at least one decision
+    - "Abandoned" status requires a documented reason
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    # ============================================
+    # Core Identity
+    # ============================================
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+      description: |
+        Concise name for the campaign. Should capture the essence
+        of what's being explored without being too specific.
+      example: "Career Transition 2025"
+
+    question:
+      type: string
+      minLength: 20
+      maxLength: 500
+      description: |
+        The central question driving this exploration. Framed as an
+        open-ended question, not a goal or destination.
+
+        Good: "What kind of work would energize me?"
+        Bad: "Get a job at Hooli" (too specific, not a question)
+      example: "What kind of work environment and role would let me thrive while maintaining work-life balance?"
+
+    description:
+      $ref: './common.yaml#/Markdown'
+      description: |
+        Extended context about the campaign including background,
+        motivations, and initial thoughts. Markdown supported.
+
+    # ============================================
+    # Domain & Classification (Optional)
+    # ============================================
+    domain:
+      $ref: './common.yaml#/CampaignDomain'
+      description: |
+        Optional domain hint. Does NOT change framework behavior.
+        Purely for organization and filtering.
+
+    tags:
+      type: array
+      items:
+        type: string
+        minLength: 2
+        maxLength: 30
+      maxItems: 10
+      description: User-defined tags for organization
+      example: ["tech", "remote-work", "2025"]
+
+    # ============================================
+    # Status & Lifecycle
+    # ============================================
+    status:
+      $ref: './common.yaml#/CampaignStatus'
+      default: "active"
+
+    status_reason:
+      type: string
+      maxLength: 500
+      description: |
+        Explanation for current status. Required when status is
+        "paused", "pivoted", or "abandoned". Recommended for "completed".
+      example: "Pivoted to focus on remote-first companies after prototype insights"
+
+    # ============================================
+    # Life Balance Tracking
+    # ============================================
+    initial_balance:
+      $ref: './common.yaml#/LifeBalance'
+      description: Life balance assessment at campaign start
+
+    current_balance:
+      $ref: './common.yaml#/LifeBalance'
+      description: Most recent life balance assessment
+
+    target_areas:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+      minItems: 1
+      maxItems: 4
+      description: |
+        Which life areas this campaign primarily aims to improve.
+        Used for balance tracking and ensuring holistic design.
+      example: ["work", "health"]
+
+    # ============================================
+    # Time Boundaries
+    # ============================================
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+    started_at:
+      $ref: './common.yaml#/DateOnly'
+      description: When active exploration began
+
+    target_end_date:
+      $ref: './common.yaml#/DateOnly'
+      description: |
+        Soft target for campaign completion. Not a deadline, but a
+        time-boxing mechanism to prevent analysis paralysis.
+      example: "2025-06-30"
+
+    ended_at:
+      $ref: './common.yaml#/DateOnly'
+      description: When campaign concluded (completed/abandoned)
+
+    # ============================================
+    # Constraints Summary
+    # ============================================
+    constraint_summary:
+      type: object
+      description: Aggregated view of campaign constraints
+      properties:
+        hard_count:
+          type: integer
+          minimum: 0
+          description: Number of immutable constraints
+        soft_count:
+          type: integer
+          minimum: 0
+          description: Number of negotiable constraints
+        key_constraints:
+          type: array
+          items:
+            type: string
+          maxItems: 5
+          description: Most important constraints (for quick reference)
+      example:
+        hard_count: 2
+        soft_count: 5
+        key_constraints:
+          - "Must stay in Seattle area"
+          - "Remote-first required"
+          - "Minimum $200k compensation"
+
+    # ============================================
+    # Progress Metrics
+    # ============================================
+    metrics:
+      type: object
+      description: Campaign progress indicators (computed, not stored)
+      readOnly: true
+      properties:
+        hypothesis_count:
+          type: integer
+          minimum: 0
+        active_hypothesis_count:
+          type: integer
+          minimum: 0
+        prototype_count:
+          type: integer
+          minimum: 0
+        completed_prototype_count:
+          type: integer
+          minimum: 0
+        evidence_count:
+          type: integer
+          minimum: 0
+        decision_count:
+          type: integer
+          minimum: 0
+        days_active:
+          type: integer
+          minimum: 0
+          description: Number of days since campaign started
+        last_activity_at:
+          $ref: './common.yaml#/Timestamp'
+          description: When the campaign was last worked on
+
+    # ============================================
+    # Relationships (IDs only, not embedded)
+    # ============================================
+    hypothesis_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: IDs of hypotheses in this campaign
+
+    constraint_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: IDs of constraints for this campaign
+
+    decision_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: IDs of decisions made during this campaign
+
+    session_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: IDs of coaching sessions for this campaign
+
+  required:
+    - id
+    - title
+    - question
+    - status
+    - created_at
+    - updated_at
+
+# ============================================
+# Campaign Creation Request
+# ============================================
+
+CampaignCreate:
+  type: object
+  description: Request body for creating a new campaign
+  properties:
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+    question:
+      type: string
+      minLength: 20
+      maxLength: 500
+    description:
+      $ref: './common.yaml#/Markdown'
+    domain:
+      $ref: './common.yaml#/CampaignDomain'
+    tags:
+      type: array
+      items:
+        type: string
+      maxItems: 10
+    initial_balance:
+      $ref: './common.yaml#/LifeBalance'
+    target_areas:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+      minItems: 1
+      maxItems: 4
+    target_end_date:
+      $ref: './common.yaml#/DateOnly'
+  required:
+    - title
+    - question
+
+# ============================================
+# Campaign Update Request
+# ============================================
+
+CampaignUpdate:
+  type: object
+  description: Request body for updating a campaign
+  properties:
+    title:
+      type: string
+      minLength: 5
+      maxLength: 100
+    question:
+      type: string
+      minLength: 20
+      maxLength: 500
+    description:
+      $ref: './common.yaml#/Markdown'
+    domain:
+      $ref: './common.yaml#/CampaignDomain'
+    tags:
+      type: array
+      items:
+        type: string
+      maxItems: 10
+    status:
+      $ref: './common.yaml#/CampaignStatus'
+    status_reason:
+      type: string
+      maxLength: 500
+    current_balance:
+      $ref: './common.yaml#/LifeBalance'
+    target_areas:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+      minItems: 1
+      maxItems: 4
+    target_end_date:
+      $ref: './common.yaml#/DateOnly'
+
+# ============================================
+# Campaign List Response
+# ============================================
+
+CampaignList:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/Campaign'
+    total:
+      type: integer
+      minimum: 0
+    page:
+      type: integer
+      minimum: 1
+    page_size:
+      type: integer
+      minimum: 1
+      maximum: 100
+
+  # ============================================
+  # Example Objects for Swagger UI
+  # ============================================
+
+  example:
+    id: "c9b3a3c9-1904-4b6c-fe7c-41e28e25c9b3"
+    title: "Staff Engineer Job Search Q1 2025"
+    question: "What kind of work environment and role would let me thrive as a Staff+ engineer while maintaining work-life balance?"
+    description: |
+      Intensive job search period after leaving previous role.
+      Focus on networking, applications, and interview preparation.
+      My partner supports this temporary imbalance.
+    domain: career
+    tags: ["job-search", "staff-engineer", "2025", "remote-first"]
+    status: active
+    target_areas: ["work"]
+    initial_balance:
+      work: 8
+      play: 3
+      love: 5
+      health: 5
+    constraint_summary:
+      hard_count: 2
+      soft_count: 4
+      key_constraints:
+        - "Remote-first or hybrid (no full RTO)"
+        - "Staff/Principal level only"
+        - "Companies with work-life balance culture"
+        - "Partner in Seattle area"
+    created_at: "2025-01-01T00:00:00Z"
+    updated_at: "2025-01-15T10:30:00Z"
+    started_at: "2025-01-01"
+    target_end_date: "2025-03-31"
+
+  examples:
+    career_campaign:
+      summary: "Career Transition Campaign"
+      description: "Job search campaign focused on Staff Engineer roles"
+      value:
+        title: "Staff Engineer Job Search Q1 2025"
+        question: "What kind of work environment and role would let me thrive as a Staff+ engineer while maintaining work-life balance?"
+        domain: career
+        tags: ["job-search", "staff-engineer", "remote-first"]
+        target_areas: ["work"]
+        initial_balance:
+          work: 8
+          play: 3
+          love: 5
+          health: 5
+    health_campaign:
+      summary: "Health/Fitness Campaign"
+      description: "ADHD-friendly fitness routine campaign"
+      value:
+        title: "ADHD-Friendly Fitness Routine 2025"
+        question: "How can I build sustainable exercise habits that work WITH my ADHD rather than against it?"
+        domain: health
+        tags: ["adhd", "fitness", "habits", "routine"]
+        target_areas: ["health"]
+        description: |
+          Traditional gym routines fail because they require consistency my ADHD brain resists.
+          Need to find exercises that are novel, stimulating, and don't feel like "work".
+    cooking_campaign:
+      summary: "Culinary Skills Campaign"
+      description: "Campaign to master cooking for connection"
+      value:
+        title: "Master 10 Signature Dishes"
+        question: "What cooking skills would make me feel confident hosting dinner parties and cooking for my partner?"
+        domain: relationship
+        tags: ["cooking", "hosting", "relationship", "skill-building"]
+        target_areas: ["love", "play"]
+    relationship_campaign:
+      summary: "Relationship Campaign"
+      description: "Protecting partner time during intensive periods"
+      value:
+        title: "Intentional Partner Time During Job Search"
+        question: "How do I protect and enrich my relationship during this intensive job search season?"
+        domain: relationship
+        tags: ["partner", "quality-time", "date-nights"]
+        target_areas: ["love"]
+        description: |
+          Job search is consuming. Risk of neglecting partner time.
+          Need intentional structures to ensure relationship doesn't suffer.
+    side_project_campaign:
+      summary: "Creative Side Project"
+      description: "AI automation platform as play+work"
+      value:
+        title: "Personal AI Automation Platform"
+        question: "How can I build AI tools that genuinely help my daily life while learning cutting-edge techniques?"
+        domain: career
+        tags: ["ai", "automation", "side-project", "learning"]
+        target_areas: ["work", "play"]
+        description: |
+          Building personal AI agents and skills. Combines learning with practical utility.
+          Risk: can become a procrastination vector from job search.
+
+    # ============================================
+    # The Bear - Restaurant Industry Example
+    # ============================================
+    restaurant_transformation:
+      summary: "Restaurant Transformation Campaign (The Bear)"
+      description: "Fine dining chef transforms family sandwich shop - inspired by The Bear"
+      value:
+        title: "Transform The Beef into The Bear"
+        question: "How do I honor my brother's legacy while building something that uses my fine dining skills?"
+        domain: career
+        tags: ["restaurant", "transformation", "legacy", "chicago", "fine-dining"]
+        target_areas: ["work", "love"]
+        initial_balance:
+          work: 9
+          play: 2
+          love: 4
+          health: 3
+        description: |
+          Returned to Chicago after working at the best restaurant in the world.
+          Inherited The Original Beef of Chicagoland after my brother Michael's death.
+          The shop is chaos - outdated systems, resistant staff, neighborhood expectations.
+          But there's something here. These people are family. This food means something.
+          Question: Can fine dining discipline transform a sandwich shop without losing its soul?
+    restaurant_menu_innovation:
+      summary: "Menu Innovation Campaign"
+      description: "Testing whether elevated techniques work in a casual setting"
+      value:
+        title: "Elevate Without Alienating"
+        question: "Can I introduce fine dining techniques to The Beef without losing our regulars?"
+        domain: career
+        tags: ["menu", "innovation", "customers", "identity"]
+        target_areas: ["work"]
+        description: |
+          The regulars come for the Italian beef, exactly like it's always been.
+          But I know we can do better. Fresher ingredients, better techniques, real pasta.
+          Risk: Change too fast and lose the neighborhood. Change too slow and I lose myself.

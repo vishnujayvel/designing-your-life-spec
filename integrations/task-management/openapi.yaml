@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: Task Management Lite API
+  version: 1.0.0
+  description: |
+    Lightweight, token-efficient task management schema for LLM consumption.
+
+    ## Purpose
+    Abstracts provider-specific formats (Asana, Todoist, Things, TickTick)
+    into a minimal common schema optimized for:
+    - Token efficiency (~40-60 tokens/task vs ~150-300 raw)
+    - LLM context windows
+    - Cross-provider portability
+
+    ## Provider Support
+    Currently mapped from:
+    - Asana API (via asana MCP)
+
+    Future providers need only implement the mapping layer.
+
+    ## Relationship to DYL Coach
+    This schema is consumed by DYL Coach for:
+    - Task context in standups
+    - Prototype task tracking
+    - Life balance analysis (by life_area)
+    - Anti-pattern detection (overdue counts)
+
+    ## Entity Hierarchy
+
+    ```
+    TaskList (collection)
+    ├── Task (actionable item, may link to Prototype)
+    ├── Routine (recurring pattern, links to Tasks)
+    └── Activity (one-time, non-experimental action)
+    ```
+
+paths: {}
+
+components:
+  schemas:
+    Task:
+      $ref: './schemas/task.yaml#/Task'
+    TaskList:
+      $ref: './schemas/task.yaml#/TaskList'
+    Routine:
+      $ref: './schemas/task.yaml#/Routine'
+    Activity:
+      $ref: './schemas/task.yaml#/Activity'

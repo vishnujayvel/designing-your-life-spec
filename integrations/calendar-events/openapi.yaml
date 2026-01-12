@@ -1,0 +1,36 @@
+openapi: 3.1.0
+info:
+  title: Calendar Events Lite API
+  version: 1.0.0
+  description: |
+    Lightweight, token-efficient calendar event schema for LLM consumption.
+
+    ## Purpose
+    Abstracts provider-specific formats (Google Calendar, Outlook, Apple Calendar)
+    into a minimal common schema optimized for:
+    - Token efficiency (~80-150 tokens/event vs ~200-400 raw)
+    - LLM context windows
+    - Cross-provider portability
+    - Semantic search (includes description for RAG pipelines)
+
+    ## Provider Support
+    Currently mapped from:
+    - Google Calendar API (via google-calendar MCP)
+
+    Future providers need only implement the mapping layer.
+
+    ## Relationship to DYL Coach
+    This schema is consumed by DYL Coach for:
+    - Prototype scheduling (linking experiments to calendar)
+    - Life balance analysis (work vs play distribution)
+    - Interview/prep tracking
+    - Constraint checking (max interviews/week)
+
+paths: {}
+
+components:
+  schemas:
+    CalendarEvent:
+      $ref: './schemas/event.yaml#/CalendarEvent'
+    CalendarEventList:
+      $ref: './schemas/event.yaml#/CalendarEventList'

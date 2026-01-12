@@ -1,0 +1,337 @@
+# Odyssey Plan Schema
+# Represents DYL's concept of 3 alternative life paths explored in parallel
+
+OdysseyPlan:
+  type: object
+  description: |
+    A collection of 3 alternative life paths explored in parallel, based on the
+    "Designing Your Life" Odyssey Planning exercise. Each path represents a
+    different answer to "What could my life look like?"
+
+    ## The Three Plans
+
+    - **Plan A**: Your current path - what you're already doing or the most obvious next step
+    - **Plan B**: What you'd do if Plan A suddenly disappeared (pivot plan)
+    - **Plan C**: What you'd do if money/reputation didn't matter (wild card)
+
+    ## Key Principles
+
+    1. All three plans should be genuinely appealing (not straw men)
+    2. Plans are not ranked - explore all three with equal curiosity
+    3. Plans can (and should) inform each other
+    4. The goal is insight, not commitment to one path
+
+  required:
+    - id
+    - name
+    - plan_a
+    - plan_b
+    - plan_c
+    - created_at
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    name:
+      type: string
+      description: Name for this odyssey planning exercise
+      minLength: 3
+      maxLength: 100
+      example: "2025 Career Odyssey"
+
+    timeframe_years:
+      type: integer
+      description: How many years into the future these plans envision (typically 5)
+      minimum: 1
+      maximum: 10
+      default: 5
+
+    plan_a:
+      $ref: '#/OdysseyPath'
+      description: |
+        Your current trajectory - what happens if you keep going on your present path,
+        or take the most obvious next step.
+
+    plan_b:
+      $ref: '#/OdysseyPath'
+      description: |
+        Your pivot plan - what you'd do if Plan A suddenly became impossible.
+        Forces you to discover alternatives you might not have considered.
+
+    plan_c:
+      $ref: '#/OdysseyPath'
+      description: |
+        Your wild card - what you'd do if money and reputation didn't matter.
+        Often reveals hidden passions and values.
+
+    synthesis_insights:
+      type: array
+      description: Insights gained from comparing the three paths
+      items:
+        type: string
+      example:
+        - "All three plans involve mentoring others - this is a core value"
+        - "Plan C's freedom element could be incorporated into Plan A"
+        - "My fear of Plan B reveals I'm more attached to status than I realized"
+
+    active_explorations:
+      type: array
+      description: Which elements from these plans are being actively prototyped
+      items:
+        type: object
+        properties:
+          source_plan:
+            type: string
+            enum: [plan_a, plan_b, plan_c]
+          element:
+            type: string
+            description: Which aspect is being explored
+          campaign_id:
+            $ref: './common.yaml#/EntityId'
+            description: Campaign exploring this element
+
+    coherence_check:
+      type: object
+      description: How well do these plans align with your Workview and Lifeview?
+      properties:
+        workview_alignment:
+          type: object
+          properties:
+            plan_a_score:
+              type: integer
+              minimum: 1
+              maximum: 10
+            plan_b_score:
+              type: integer
+              minimum: 1
+              maximum: 10
+            plan_c_score:
+              type: integer
+              minimum: 1
+              maximum: 10
+        lifeview_alignment:
+          type: object
+          properties:
+            plan_a_score:
+              type: integer
+              minimum: 1
+              maximum: 10
+            plan_b_score:
+              type: integer
+              minimum: 1
+              maximum: 10
+            plan_c_score:
+              type: integer
+              minimum: 1
+              maximum: 10
+        notes:
+          type: string
+          description: Reflection on alignment patterns
+
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+  x-ai-instructions: |
+    When facilitating Odyssey Planning:
+
+    1. ENSURE all three plans are genuinely appealing:
+       - If user dismisses Plan B/C as "unrealistic", push back gently
+       - Ask: "What would make this plan exciting to you?"
+
+    2. GUIDE the wild card (Plan C) exploration:
+       - Common prompt: "If you had $20M in the bank and no one would judge you..."
+       - Look for elements that could be incorporated into other plans
+
+    3. FACILITATE synthesis:
+       - After all three are drafted, ask: "What patterns do you notice?"
+       - Look for: recurring themes, surprising absences, fear signals
+
+    4. CONNECT to prototyping:
+       - Each plan should generate 2-3 prototype ideas
+       - Prioritize prototypes that test assumptions across multiple plans
+
+  x-ai-examples:
+    - name: "Software Engineer Odyssey"
+      plan_a:
+        title: "Staff Engineer Track"
+        description: "Continue growing at current company toward Staff/Principal"
+      plan_b:
+        title: "Startup Founder"
+        description: "If tech job market collapsed, start a dev tools company"
+      plan_c:
+        title: "Coding Bootcamp Teacher"
+        description: "If money didn't matter, teach programming full-time"
+      insight: "Teaching element appears in all three - consider internal mentorship programs"
+
+
+OdysseyPath:
+  type: object
+  description: One of three alternative life paths in an Odyssey Plan
+  required:
+    - title
+    - description
+    - confidence
+    - resources
+
+  properties:
+    title:
+      type: string
+      description: Short name for this life path
+      minLength: 3
+      maxLength: 100
+      example: "Staff Engineer at FAANG"
+
+    description:
+      $ref: './common.yaml#/Markdown'
+      description: Detailed description of what this life looks like in 5 years
+
+    dashboard:
+      type: object
+      description: Visual dashboard metrics for this path (from DYL book)
+      properties:
+        resources:
+          type: integer
+          description: "Do I have the resources (time, money, skill, connections)?"
+          minimum: 1
+          maximum: 4
+        likability:
+          type: integer
+          description: "How much do I like this idea?"
+          minimum: 1
+          maximum: 4
+        confidence:
+          type: integer
+          description: "How confident am I that I could make this work?"
+          minimum: 1
+          maximum: 4
+        coherence:
+          type: integer
+          description: "How well does this align with my Workview/Lifeview?"
+          minimum: 1
+          maximum: 4
+
+    key_questions:
+      type: array
+      description: Questions that need answering to pursue this path
+      items:
+        type: string
+      example:
+        - "Can I get promoted without relocating?"
+        - "What's the work-life balance like at Staff level?"
+
+    prototype_ideas:
+      type: array
+      description: Small experiments to test this path
+      items:
+        type: object
+        properties:
+          idea:
+            type: string
+          type:
+            $ref: './common.yaml#/PrototypeType'
+          effort:
+            type: string
+            enum: [low, medium, high]
+
+    blockers:
+      type: array
+      description: What's stopping you from pursuing this path?
+      items:
+        type: object
+        properties:
+          blocker:
+            type: string
+          is_gravity:
+            type: boolean
+            description: Is this an immutable constraint (gravity) or reframable (anchor)?
+
+    excitement_level:
+      type: integer
+      description: How excited are you about this path? (1-10)
+      minimum: 1
+      maximum: 10
+
+    fear_level:
+      type: integer
+      description: How scary is this path? (1-10, high fear often = high growth potential)
+      minimum: 1
+      maximum: 10
+
+
+Compass:
+  type: object
+  description: |
+    Your Workview and Lifeview - the "compass" that guides life design decisions.
+    These are personal philosophies that help evaluate coherence across life choices.
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    workview:
+      type: object
+      description: Your philosophy about work and its role in your life
+      properties:
+        statement:
+          $ref: './common.yaml#/Markdown'
+          description: |
+            ~250 words answering: Why do you work? What's work for?
+            What does work mean to you? How does it relate to the individual, others, society?
+            What defines good or worthwhile work? What does money have to do with it?
+            What do experience, growth, and fulfillment have to do with it?
+        last_updated:
+          $ref: './common.yaml#/Timestamp'
+        version:
+          type: integer
+          description: How many times you've revised this
+
+    lifeview:
+      type: object
+      description: Your philosophy about life, meaning, and what matters
+      properties:
+        statement:
+          $ref: './common.yaml#/Markdown'
+          description: |
+            ~250 words answering: Why are you here? What is the meaning of life?
+            What is the relationship between the individual and others?
+            Where do family, country, and the world fit in?
+            What is good, and what is evil? Is there a higher power?
+            What is the role of joy, sorrow, justice, injustice, love, peace, and strife in life?
+        last_updated:
+          $ref: './common.yaml#/Timestamp'
+        version:
+          type: integer
+          description: How many times you've revised this
+
+    coherence_reflection:
+      $ref: './common.yaml#/Markdown'
+      description: |
+        How do your Workview and Lifeview complement or conflict with each other?
+        Where do they align? Where is there tension?
+
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+  x-ai-instructions: |
+    When working with Compass:
+
+    1. NEVER rush the Workview/Lifeview writing:
+       - These are deep reflections, not quick answers
+       - Suggest the user take a week to draft and revise
+
+    2. USE the Compass for coherence checks:
+       - When evaluating Odyssey Plans, reference the Compass
+       - When user is stuck on a decision, ask: "How does this align with your Workview?"
+
+    3. PROMPT periodic updates:
+       - Compass should be revisited every 6-12 months
+       - Major life events warrant a review
+
+  x-ai-examples:
+    - workview_excerpt: "Work is how I contribute to others while developing mastery. Money is a tool, not a goal. I need autonomy and the feeling that my work matters beyond quarterly metrics."
+      lifeview_excerpt: "Life is about growth, connection, and leaving things better than I found them. Joy comes from challenge overcome, not comfort maintained."
+      coherence_note: "Both emphasize growth and contribution - strong alignment. Tension: Lifeview values connection but Workview emphasizes autonomy."

@@ -1,0 +1,356 @@
+# Documentation Paths
+# These paths exist solely to expose schemas in Swagger UI / Redoc
+# They are not meant to be implemented as actual REST endpoints
+
+# ============================================
+# Core Entities
+# ============================================
+
+/schemas/campaign:
+  get:
+    operationId: getCampaignSchema
+    summary: Campaign Schema
+    description: |
+      Top-level container for a life design exploration. A campaign represents
+      a bounded period of experimentation around a life question or transition.
+    tags: [Campaign]
+    responses:
+      '200':
+        description: Campaign entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/campaign.yaml#/Campaign'
+
+/schemas/hypothesis:
+  get:
+    operationId: getHypothesisSchema
+    summary: Hypothesis Schema
+    description: |
+      A belief or assumption about what might work in your life. Hypotheses
+      are tested through prototypes and validated by evidence.
+    tags: [Hypothesis]
+    responses:
+      '200':
+        description: Hypothesis entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/hypothesis.yaml#/Hypothesis'
+
+/schemas/prototype:
+  get:
+    operationId: getPrototypeSchema
+    summary: Prototype Schema
+    description: |
+      A small experiment designed to test a hypothesis. Prototypes are
+      time-boxed, low-risk ways to gather real-world data.
+    tags: [Prototype]
+    responses:
+      '200':
+        description: Prototype entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/prototype.yaml#/Prototype'
+
+/schemas/evidence:
+  get:
+    operationId: getEvidenceSchema
+    summary: Evidence Schema
+    description: |
+      Observations and learnings from prototypes. Evidence either supports,
+      refutes, or requires refinement of hypotheses.
+    tags: [Evidence]
+    responses:
+      '200':
+        description: Evidence entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/evidence.yaml#/Evidence'
+
+# ============================================
+# Supporting Entities
+# ============================================
+
+/schemas/constraint:
+  get:
+    operationId: getConstraintSchema
+    summary: Constraint Schema
+    description: |
+      Boundaries that shape what's possible. Constraints can be hard (immutable)
+      or soft (negotiable).
+    tags: [Constraint]
+    responses:
+      '200':
+        description: Constraint entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/constraint.yaml#/Constraint'
+
+/schemas/energy-log:
+  get:
+    operationId: getEnergyLogSchema
+    summary: EnergyLog Schema
+    description: |
+      Tracking of engagement, flow, and energy levels across activities.
+      Used for identifying patterns and optimizing life design.
+    tags: [EnergyLog]
+    responses:
+      '200':
+        description: EnergyLog entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/energy-log.yaml#/EnergyLog'
+
+/schemas/decision:
+  get:
+    operationId: getDecisionSchema
+    summary: Decision Schema
+    description: |
+      Formal choice points with documented rationale. Decisions capture
+      the reasoning behind major pivots or commitments.
+    tags: [Decision]
+    responses:
+      '200':
+        description: Decision entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/decision.yaml#/Decision'
+
+/schemas/session:
+  get:
+    operationId: getSessionSchema
+    summary: Session Schema
+    description: |
+      Coaching interaction records. Sessions track progress, insights,
+      and action items from structured check-ins.
+    tags: [Session]
+    responses:
+      '200':
+        description: Session entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/session.yaml#/Session'
+
+# ============================================
+# Phase 3 Entities (Gemini Recommendations)
+# ============================================
+
+/schemas/season:
+  get:
+    operationId: getSeasonSchema
+    summary: Season Schema
+    description: |
+      Temporal balance entity for managing intensive focus periods ("seasons" of life).
+      Supports burst_mode for planned imbalance with automatic recovery prompts.
+    tags: [Season]
+    responses:
+      '200':
+        description: Season entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/season.yaml#/Season'
+
+/schemas/life-challenge:
+  get:
+    operationId: getLifeChallengeSchema
+    summary: LifeChallenge Schema (Polymorphic)
+    description: |
+      Polymorphic problem classification using OpenAPI discriminator.
+
+      - **AnchorChallenge**: A solvable problem where you're anchored to a specific
+        solution. Requires reframing to find alternatives.
+      - **GravityChallenge**: An unsolvable constraint (like gravity) that must be
+        accepted. Focus on controllable factors within the constraint.
+    tags: [LifeChallenge]
+    responses:
+      '200':
+        description: LifeChallenge polymorphic schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/life-challenge.yaml#/LifeChallenge'
+
+/schemas/life-challenge/anchor:
+  get:
+    operationId: getAnchorChallengeSchema
+    summary: AnchorChallenge Schema
+    description: |
+      A problem where you've anchored to a specific solution that isn't available.
+      Requires systematic reframing to discover alternative approaches.
+
+      Example: "I can't get my dream job at Hooli" → Reframe to explore what
+      aspects of that job appeal to you and find alternatives.
+    tags: [LifeChallenge]
+    responses:
+      '200':
+        description: AnchorChallenge entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/life-challenge.yaml#/AnchorChallenge'
+
+/schemas/life-challenge/gravity:
+  get:
+    operationId: getGravityChallengeSchema
+    summary: GravityChallenge Schema
+    description: |
+      A constraint that cannot be changed (like gravity). The goal is acceptance
+      and working within the constraint, not solving it.
+
+      Example: "I'm 50 years old and can't start over" → Accept the constraint,
+      focus on what IS possible at your current life stage.
+    tags: [LifeChallenge]
+    responses:
+      '200':
+        description: GravityChallenge entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/life-challenge.yaml#/GravityChallenge'
+
+/schemas/network-connection:
+  get:
+    operationId: getNetworkConnectionSchema
+    summary: NetworkConnection Schema
+    description: |
+      Tracks professional/personal connections with relationship strength.
+      Prioritizes weak ties over strong ties for job searches (Granovetter theory).
+
+      Key insight: Weak ties bridge to NEW networks and opportunities.
+      Strong ties share your existing network.
+    tags: [NetworkConnection]
+    responses:
+      '200':
+        description: NetworkConnection entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/network-connection.yaml#/NetworkConnection'
+
+/schemas/failure-log:
+  get:
+    operationId: getFailureLogSchema
+    summary: FailureLog Schema
+    description: |
+      Systematic failure tracking for building "failure immunity".
+      Categorizes failures by type and extracts actionable insights.
+
+      Categories:
+      - **screwup**: Process error, preventable with better systems
+      - **weakness**: Skill gap requiring development
+      - **growth_opportunity**: Stretch attempt, valuable regardless of outcome
+      - **external**: Factors outside your control
+      - **misalignment**: Values/fit mismatch, not a personal failing
+    tags: [FailureLog]
+    responses:
+      '200':
+        description: FailureLog entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/failure-log.yaml#/FailureLog'
+
+# ============================================
+# Common Types
+# ============================================
+
+/schemas/life-balance:
+  get:
+    operationId: getLifeBalanceSchema
+    summary: LifeBalance Schema (HWPL Dashboard)
+    description: |
+      The Work/Play/Love/Health (HWPL) dashboard from DYL methodology.
+      Each dimension rated 0-10, with soft cap at 28/40 total.
+
+      Enhanced with:
+      - Sentiment explanations for each dimension
+      - Health sub-dimensions (physical, emotional, spiritual)
+      - Burst mode tracking for planned imbalance
+    tags: [Common]
+    responses:
+      '200':
+        description: LifeBalance entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.yaml#/LifeBalance'
+
+/schemas/odyssey-plan:
+  get:
+    operationId: getOdysseyPlanSchema
+    summary: OdysseyPlan Schema
+    description: |
+      A collection of 3 alternative life paths explored in parallel.
+      Core DYL exercise from the book - helps discover possibilities beyond the obvious.
+
+      - **Plan A**: Your current path or most obvious next step
+      - **Plan B**: What you'd do if Plan A disappeared (pivot plan)
+      - **Plan C**: What you'd do if money/reputation didn't matter (wild card)
+    tags: [OdysseyPlan]
+    responses:
+      '200':
+        description: OdysseyPlan entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/odyssey-plan.yaml#/OdysseyPlan'
+
+/schemas/compass:
+  get:
+    operationId: getCompassSchema
+    summary: Compass Schema (Workview/Lifeview)
+    description: |
+      Your Workview and Lifeview - the personal philosophies that guide life design.
+      These are used for coherence checks across Odyssey Plans and major decisions.
+
+      - **Workview**: Your philosophy about work and its role in your life (~250 words)
+      - **Lifeview**: Your philosophy about life, meaning, and what matters (~250 words)
+      - **Coherence Reflection**: How do they complement or conflict?
+    tags: [Compass]
+    responses:
+      '200':
+        description: Compass entity schema
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/odyssey-plan.yaml#/Compass'
+
+/schemas/common-types:
+  get:
+    operationId: getCommonTypesSchema
+    summary: Common Types Reference
+    description: |
+      Shared types used across all entities:
+      - EntityId, Timestamp, DateOnly, Markdown
+      - Status enums (Campaign, Hypothesis, Prototype)
+      - Energy/Flow states
+      - Error types
+    tags: [Common]
+    responses:
+      '200':
+        description: Common types overview
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                life_areas:
+                  $ref: '../schemas/common.yaml#/LifeArea'
+                campaign_status:
+                  $ref: '../schemas/common.yaml#/CampaignStatus'
+                hypothesis_status:
+                  $ref: '../schemas/common.yaml#/HypothesisStatus'
+                prototype_status:
+                  $ref: '../schemas/common.yaml#/PrototypeStatus'
+                energy_level:
+                  $ref: '../schemas/common.yaml#/EnergyLevel'
+                flow_state:
+                  $ref: '../schemas/common.yaml#/FlowState'

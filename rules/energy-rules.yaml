@@ -1,0 +1,263 @@
+# Energy Rules
+# Rules for energy tracking and pattern recognition
+
+name: energy-rules
+version: 1.0.0
+description: |
+  Rules for tracking energy, identifying patterns, and using energy
+  data to inform life design decisions. Energy is a key signal for
+  what activities to pursue or avoid.
+
+# ============================================
+# Energy Tracking
+# ============================================
+
+tracking:
+  frequency:
+    recommended: "3-5 logs per day minimum during active tracking"
+    minimum: "1 log per day"
+    campaign_start: "intensive tracking for first 2 weeks"
+
+  what_to_log:
+    required:
+      - activity: "What you were doing"
+      - life_area: "Work, Play, Love, or Health"
+      - energy_level: "-5 to +5"
+
+    recommended:
+      - flow_state: "None, Partial, Full"
+      - engagement: "1-10"
+      - context: "Time, place, social setting"
+
+    valuable_additions:
+      - highlights: "What was energizing"
+      - drains: "What was draining"
+      - tags: "For pattern recognition"
+
+  timing:
+    ideal: "Log immediately after activity"
+    acceptable: "Within 2 hours"
+    degraded: "Same day"
+    unreliable: "Next day or later"
+
+# ============================================
+# Energy Scale
+# ============================================
+
+scale:
+  definition:
+    range: "-5 to +5"
+    zero: "Neutral - neither energizing nor draining"
+    positive: "Activities that give you energy"
+    negative: "Activities that drain your energy"
+
+  anchors:
+    -5: "Completely exhausted, dreading, actively harmful"
+    -3: "Draining, resistant, hard to start/continue"
+    -1: "Slightly tiring, not quite right"
+    0: "Neutral, neither here nor there"
+    1: "Slightly pleasant, easy"
+    3: "Energizing, engaged, would happily do more"
+    5: "Peak flow, time flies, could do this forever"
+
+  examples:
+    -5: "Bureaucratic meeting about process for process sake"
+    -3: "Expense reports, inbox zero maintenance"
+    0: "Commute, routine tasks"
+    3: "Creative problem solving, teaching someone"
+    5: "Deep work on passion project, meaningful conversation"
+
+# ============================================
+# Pattern Recognition
+# ============================================
+
+patterns:
+  temporal_patterns:
+    description: "When are you most/least energized?"
+    analysis:
+      - by_time_of_day: ["morning", "midday", "afternoon", "evening", "night"]
+      - by_day_of_week: true
+      - by_week_in_month: true
+
+    insights:
+      - peak_energy_times: "Schedule important work here"
+      - low_energy_times: "Schedule routine tasks here"
+      - energy_crashes: "Investigate causes"
+
+  activity_patterns:
+    description: "What activities energize vs. drain?"
+    analysis:
+      - top_energizers: "Activities with consistent positive scores"
+      - top_drainers: "Activities with consistent negative scores"
+      - variance: "Activities with inconsistent scores (context-dependent)"
+
+    thresholds:
+      consistent_energizer: "average >= 3, count >= 3"
+      consistent_drainer: "average <= -3, count >= 3"
+      needs_investigation: "std_dev > 2"
+
+  context_patterns:
+    description: "What contexts affect energy?"
+    analysis:
+      - social_context: "alone vs. pair vs. group"
+      - environment: "home vs. office vs. other"
+      - duration: "short vs. long activities"
+
+    insights:
+      - introvert_signals: "alone > group consistently"
+      - extrovert_signals: "group > alone consistently"
+      - environment_sensitivity: "large variance by location"
+
+  flow_patterns:
+    description: "What conditions enable flow state?"
+    analysis:
+      - flow_activities: "Which activities trigger flow?"
+      - flow_contexts: "What conditions enable flow?"
+      - flow_frequency: "How often is flow achieved?"
+
+    healthy_targets:
+      weekly_flow_count: ">= 3 full flow experiences"
+      flow_activity_diversity: ">= 2 different activities"
+
+# ============================================
+# Rules and Alerts
+# ============================================
+
+rules:
+  tracking_consistency:
+    description: "Ensure regular logging"
+    rules:
+      - daily_minimum:
+          condition: "logs_today < 1"
+          after_days: 3
+          message: "No energy logs for 3 days. Quick log something!"
+
+      - intensive_tracking:
+          condition: "campaign_age_days < 14"
+          expected: "logs_per_day >= 3"
+          message: "Early campaign - track more for pattern recognition"
+
+  energy_warnings:
+    description: "Flag concerning patterns"
+    rules:
+      - sustained_drain:
+          condition: "7_day_average < -1"
+          severity: warning
+          message: "Consistently negative energy for a week. What's happening?"
+
+      - no_flow:
+          condition: "30_day_flow_count == 0"
+          severity: coaching
+          message: "No flow states in 30 days. Missing engagement opportunities?"
+
+      - work_drain:
+          condition: |
+            life_area == 'work' AND
+            average_energy < -2 AND
+            log_count > 10
+          severity: escalation
+          message: "Work is consistently draining. This is unsustainable."
+
+  positive_reinforcement:
+    description: "Highlight good patterns"
+    rules:
+      - found_energizer:
+          condition: "new_activity_average > 3 AND count >= 3"
+          action: celebrate
+          message: "{activity} is consistently energizing! Keep doing this."
+
+      - flow_achievement:
+          condition: "weekly_flow_count >= 5"
+          action: celebrate
+          message: "Great week for flow states! What enabled this?"
+
+# ============================================
+# Integration with Life Design
+# ============================================
+
+integration:
+  prototype_energy:
+    description: "Use energy to inform prototype design"
+    rules:
+      - schedule_high_energy:
+          guideline: "Schedule prototypes during peak energy times"
+          insight: "You'll get better signal when you're at your best"
+
+      - track_prototype_energy:
+          guideline: "Always log energy after prototypes"
+          insight: "How did the prototype make you feel? Critical data!"
+
+  hypothesis_evidence:
+    description: "Energy as evidence for hypotheses"
+    rules:
+      - energy_as_evidence:
+          guideline: "Energy responses are valid evidence"
+          insight: "If it drains you, that's data even if it's 'right on paper'"
+
+      - energy_hypothesis:
+          guideline: "Create hypotheses about energy patterns"
+          example: "Hypothesis: I'm more energized by small teams than large"
+
+  decision_factor:
+    description: "Use energy in decision-making"
+    rules:
+      - energy_sustainable:
+          guideline: "Can you sustain the energy profile of an option?"
+          insight: "A job that sounds good but has draining daily activities won't work"
+
+      - prototype_energy_match:
+          guideline: "Does prototype energy match what you expected?"
+          insight: "Disconnect between expected and actual energy is valuable signal"
+
+# ============================================
+# Reports and Visualization
+# ============================================
+
+reports:
+  weekly_energy_report:
+    contents:
+      - average_energy: "Overall and by life area"
+      - flow_count: "How many flow states"
+      - top_energizers: "Best activities"
+      - top_drainers: "Worst activities"
+      - pattern_insights: "Any new patterns detected"
+      - recommendations: "Suggested adjustments"
+
+  energy_dashboard:
+    widgets:
+      - current_streak: "Days of consistent logging"
+      - weekly_trend: "Up/down/stable"
+      - flow_meter: "Flow states this week vs. target"
+      - balance_by_area: "Energy distribution across WELH"
+
+  pattern_analysis:
+    trigger: "At least 50 logs"
+    outputs:
+      - energy_heatmap: "By time and day"
+      - activity_ranking: "Sorted by average energy"
+      - context_correlations: "What conditions matter"
+      - recommendations: "Actionable insights"
+
+# ============================================
+# Best Practices
+# ============================================
+
+best_practices:
+  logging:
+    - "Log immediately - memory fades fast"
+    - "Be honest - no one else sees this"
+    - "Include emotional response - feelings are data"
+    - "Note surprises - unexpected reactions are valuable"
+    - "Tag consistently - enables better patterns"
+
+  interpretation:
+    - "Look for patterns, not individual data points"
+    - "Context matters - same activity can vary"
+    - "Energy isn't just physical - mental/emotional counts"
+    - "Sustained patterns > occasional blips"
+
+  action:
+    - "Increase energizers, decrease drainers"
+    - "Experiment with timing and context"
+    - "Protect flow activities"
+    - "Investigate inconsistent activities"

@@ -1,0 +1,454 @@
+# Evidence Schema
+# Observations and learnings from prototypes
+
+Evidence:
+  type: object
+  description: |
+    Evidence represents observations and learnings collected from prototypes.
+    Evidence is the raw data that validates or invalidates hypotheses.
+
+    ## DYL Principles Applied
+
+    - **Failure Immunity**: All evidence is valid data, including negative
+    - **Reframing**: Evidence can transform the question being asked
+    - **Bias to Action**: Evidence should inform next actions
+
+    ## Evidence Types
+
+    | Type | Description | Example |
+    |------|-------------|---------|
+    | insight | Qualitative realization | "I realized I value autonomy more than stability" |
+    | data | Quantitative measurement | "4/5 startups had remote-first policies" |
+    | feedback | External opinion | "They said my skills would translate well" |
+    | emotion | Personal feeling (valid data!) | "I felt excited and energized during the conversation" |
+    | observation | Neutral factual observation | "The office was open-plan with no private spaces" |
+
+    ## Evidence Strength
+
+    - **weak**: Suggestive but not conclusive (single data point)
+    - **moderate**: Meaningful signal (pattern emerging)
+    - **strong**: Significant finding (consistent pattern)
+    - **decisive**: Clear enough to act on
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    prototype_id:
+      $ref: './common.yaml#/EntityId'
+      description: Prototype this evidence came from
+
+    hypothesis_id:
+      $ref: './common.yaml#/EntityId'
+      description: |
+        Which hypothesis this evidence relates to.
+        May differ from prototype's primary hypothesis.
+
+    # ============================================
+    # Core Content
+    # ============================================
+    content:
+      type: string
+      minLength: 10
+      maxLength: 2000
+      description: |
+        The actual observation, insight, or data point.
+        Should be specific and factual where possible.
+      example: "The CTO mentioned that engineers get to choose their own projects and can switch teams quarterly. This aligns with my need for variety and autonomy."
+
+    type:
+      $ref: './common.yaml#/EvidenceType'
+
+    # ============================================
+    # Assessment
+    # ============================================
+    direction:
+      $ref: './common.yaml#/EvidenceDirection'
+      description: Does this evidence support or refute the hypothesis?
+
+    strength:
+      $ref: './common.yaml#/EvidenceStrength'
+      description: How strong is this evidence?
+
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1
+      description: |
+        How confident are you in this evidence? (0-1)
+        Lower for hearsay, higher for direct observation.
+      default: 0.7
+      example: 0.85
+
+    # ============================================
+    # Context
+    # ============================================
+    source:
+      type: string
+      maxLength: 200
+      description: Where this evidence came from
+      example: "Direct conversation with CTO"
+
+    quote:
+      type: string
+      maxLength: 500
+      description: |
+        Direct quote if applicable.
+        Helps preserve accuracy of the observation.
+      example: "We believe people do their best work when they have ownership"
+
+    tags:
+      type: array
+      items:
+        type: string
+        maxLength: 30
+      maxItems: 10
+      description: User-defined tags for categorization
+      example: ["autonomy", "culture", "positive"]
+
+    # ============================================
+    # Emotional Component
+    # ============================================
+    emotional_response:
+      type: object
+      description: |
+        Emotional response to this evidence.
+        Emotions are valid data in life design!
+      properties:
+        primary:
+          type: string
+          enum:
+            - excited
+            - curious
+            - hopeful
+            - neutral
+            - anxious
+            - disappointed
+            - confused
+            - energized
+            - drained
+          description: Primary emotion felt
+        intensity:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Intensity of the emotion (1-5)
+        notes:
+          type: string
+          maxLength: 200
+          description: Additional notes about the emotional response
+      example:
+        primary: "excited"
+        intensity: 4
+        notes: "This really resonated with what I'm looking for"
+
+    # ============================================
+    # Follow-up
+    # ============================================
+    questions_raised:
+      type: array
+      items:
+        type: string
+        maxLength: 200
+      maxItems: 5
+      description: New questions this evidence raises
+      example:
+        - "How do they handle project failures?"
+        - "What's the work-life balance like?"
+
+    action_implications:
+      type: string
+      maxLength: 500
+      description: What this evidence suggests for next steps
+      example: "Should explore more startups to validate this pattern"
+
+    # ============================================
+    # Timestamps
+    # ============================================
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+    observed_at:
+      $ref: './common.yaml#/Timestamp'
+      description: |
+        When the observation actually occurred.
+        May differ from created_at if entered later.
+
+  required:
+    - id
+    - prototype_id
+    - hypothesis_id
+    - content
+    - type
+    - direction
+    - created_at
+    - updated_at
+
+# ============================================
+# Evidence Creation Request
+# ============================================
+
+EvidenceCreate:
+  type: object
+  description: Request body for creating new evidence
+  properties:
+    hypothesis_id:
+      $ref: './common.yaml#/EntityId'
+      description: Which hypothesis this evidence relates to
+    content:
+      type: string
+      minLength: 10
+      maxLength: 2000
+    type:
+      $ref: './common.yaml#/EvidenceType'
+    direction:
+      $ref: './common.yaml#/EvidenceDirection'
+    strength:
+      $ref: './common.yaml#/EvidenceStrength'
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1
+      default: 0.7
+    source:
+      type: string
+      maxLength: 200
+    quote:
+      type: string
+      maxLength: 500
+    tags:
+      type: array
+      items:
+        type: string
+      maxItems: 10
+    emotional_response:
+      type: object
+      properties:
+        primary:
+          type: string
+          enum:
+            - excited
+            - curious
+            - hopeful
+            - neutral
+            - anxious
+            - disappointed
+            - confused
+            - energized
+            - drained
+        intensity:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+          maxLength: 200
+    questions_raised:
+      type: array
+      items:
+        type: string
+      maxItems: 5
+    action_implications:
+      type: string
+      maxLength: 500
+    observed_at:
+      $ref: './common.yaml#/Timestamp'
+  required:
+    - content
+    - type
+    - direction
+
+# ============================================
+# Evidence Update Request
+# ============================================
+
+EvidenceUpdate:
+  type: object
+  description: Request body for updating evidence
+  properties:
+    content:
+      type: string
+      minLength: 10
+      maxLength: 2000
+    type:
+      $ref: './common.yaml#/EvidenceType'
+    direction:
+      $ref: './common.yaml#/EvidenceDirection'
+    strength:
+      $ref: './common.yaml#/EvidenceStrength'
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1
+    source:
+      type: string
+      maxLength: 200
+    quote:
+      type: string
+      maxLength: 500
+    tags:
+      type: array
+      items:
+        type: string
+      maxItems: 10
+    emotional_response:
+      type: object
+      properties:
+        primary:
+          type: string
+        intensity:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+    questions_raised:
+      type: array
+      items:
+        type: string
+      maxItems: 5
+    action_implications:
+      type: string
+      maxLength: 500
+
+# ============================================
+# Evidence List Response
+# ============================================
+
+EvidenceList:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/Evidence'
+    total:
+      type: integer
+      minimum: 0
+    page:
+      type: integer
+      minimum: 1
+    page_size:
+      type: integer
+      minimum: 1
+      maximum: 100
+
+  # ============================================
+  # Evidence Examples - Tech & Restaurant
+  # ============================================
+  examples:
+    # Tech Industry Examples
+    tech_insight_evidence:
+      summary: "Tech - Startup Culture Insight"
+      description: "Insight from coffee chat about startup autonomy"
+      value:
+        id: "e-tech-001"
+        prototype_id: "p-tech-001"
+        hypothesis_id: "h-tech-001"
+        type: insight
+        direction: supports
+        strength: strong
+        confidence: 0.9
+        content: "The CTO at Pied Piper mentioned that engineers choose their own projects and can switch teams quarterly. No one tells you what to do - you're expected to find problems worth solving. This aligns exactly with what I'm missing at Hooli."
+        source: "Coffee chat with Richard Hendricks, CTO"
+        quote: "At Pied Piper, we hire adults and treat them like adults. No one checks if you're at your desk. We care about what you ship."
+        tags: ["autonomy", "culture", "startup", "pied-piper"]
+        emotional_response:
+          primary: excited
+          intensity: 4
+          notes: "This is exactly what I've been looking for. Felt energized just hearing about it."
+        questions_raised:
+          - "How do they handle disagreements when everyone has autonomy?"
+          - "What happens when someone 'finds the wrong problem'?"
+        action_implications: "Should do a prototype immersion - maybe a hackathon weekend with their team"
+
+    tech_emotion_evidence:
+      summary: "Tech - Hackathon Energy Response"
+      description: "Emotional evidence from immersion prototype"
+      value:
+        id: "e-tech-002"
+        prototype_id: "p-tech-002"
+        hypothesis_id: "h-tech-001"
+        type: emotion
+        direction: supports
+        strength: decisive
+        confidence: 0.95
+        content: "48 hours of intense work, shipping something real, with people who cared. I was exhausted but I couldn't stop smiling. This is the feeling I've been chasing for three years at Hooli."
+        source: "Personal reflection after hackathon"
+        tags: ["energy", "flow-state", "exhaustion", "joy"]
+        emotional_response:
+          primary: energized
+          intensity: 5
+          notes: "Even the exhaustion felt good. Like after a great workout."
+        action_implications: "This is strong evidence. I should seriously pursue startup opportunities."
+
+    # Restaurant Industry Examples (The Bear)
+    restaurant_observation_evidence:
+      summary: "Restaurant - Richie Watching (The Bear)"
+      description: "Observation evidence from watching front-of-house dynamics"
+      value:
+        id: "e-bear-001"
+        prototype_id: "p-bear-003"
+        hypothesis_id: "h-bear-002"
+        type: observation
+        direction: supports
+        strength: strong
+        confidence: 0.85
+        content: "Watched Richie work the window for a full service. He knows every regular's name. He knows their kids' names. He remembers their orders, their allergies, their anniversaries. When Mrs. Papadakis came in crying because her husband passed, Richie sat with her for twenty minutes. I can't teach that. I can't replace that."
+        source: "Direct observation during Friday dinner service"
+        tags: ["richie", "front-of-house", "relationships", "regulars"]
+        emotional_response:
+          primary: curious
+          intensity: 4
+          notes: "I've been fighting him on everything. But he has something I don't have."
+        questions_raised:
+          - "What if Richie isn't the problem - what if he's been in the wrong role?"
+          - "Can front-of-house be his domain while I focus on the kitchen?"
+        action_implications: "Need to talk to Richie about a formal front-of-house role. Stop trying to make him a line cook."
+
+    restaurant_feedback_evidence:
+      summary: "Restaurant - Customer Feedback on Pasta (The Bear)"
+      description: "Feedback evidence from menu experiment prototype"
+      value:
+        id: "e-bear-002"
+        prototype_id: "p-bear-002"
+        hypothesis_id: "h-bear-001"
+        type: feedback
+        direction: supports
+        strength: decisive
+        confidence: 0.9
+        content: "Table 4 - the guys who've been coming since Mikey was alive. They ordered the rigatoni special instead of their usual Italian beef. When I went to check, Big Tony grabbed my arm and said 'This is still The Beef, but better.' That's it. That's exactly what we're going for."
+        source: "Direct customer feedback, Table 4 regulars"
+        quote: "This is still The Beef, but better."
+        tags: ["customers", "menu", "validation", "regulars", "legacy"]
+        emotional_response:
+          primary: hopeful
+          intensity: 5
+          notes: "First time I've felt like this might actually work. Like I'm not destroying what Mikey built."
+        questions_raised:
+          - "How do we scale this without losing quality?"
+          - "What other dishes can get the 'elevated but still us' treatment?"
+        action_implications: "Add rigatoni to permanent menu. Train Marcus on pasta prep. This is the template."
+
+    restaurant_data_evidence:
+      summary: "Restaurant - Pasta Special Sales Data (The Bear)"
+      description: "Quantitative data from menu experiment"
+      value:
+        id: "e-bear-003"
+        prototype_id: "p-bear-002"
+        hypothesis_id: "h-bear-001"
+        type: data
+        direction: supports
+        strength: strong
+        confidence: 0.95
+        content: "Rigatoni special ran for 7 days. Sold out by 7pm every night. Average 47 portions/day. Food cost came in at 29% (target was under 32%). Zero complaints. Three Yelp reviews specifically mentioning the pasta. Italian beef sales only dropped 8% - customers are adding, not replacing."
+        source: "POS system data + food cost analysis"
+        tags: ["sales", "food-cost", "data", "menu-testing"]
+        emotional_response:
+          primary: hopeful
+          intensity: 4
+          notes: "The numbers don't lie. This works financially and emotionally."
+        action_implications: "Green light to expand elevated menu items. Next test: handmade focaccia for sandwiches."

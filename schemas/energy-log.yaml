@@ -1,0 +1,424 @@
+# Energy Log Schema
+# Tracking of engagement, flow, and energy across activities
+
+EnergyLog:
+  type: object
+  description: |
+    An EnergyLog captures energy levels and engagement for activities.
+    This is the data source for identifying what energizes vs. drains you.
+
+    ## DYL Principles Applied
+
+    - **Energy Mapping**: Track what brings energy, not just what pays bills
+    - **Life Balance**: Monitor engagement across all life areas
+    - **Bias to Action**: Use patterns to inform decisions
+
+    ## Energy Scale
+
+    ```
+    -5 ─────── -3 ─────── 0 ─────── +3 ─────── +5
+    Extremely   Draining   Neutral   Energizing   Peak Flow
+    Draining
+    ```
+
+    ## Flow States
+
+    - **none**: Time passed slowly, low engagement
+    - **partial**: Moments of absorption, mixed engagement
+    - **full**: Complete immersion, time flew by
+
+    ## Usage Pattern
+
+    Log activities immediately after to preserve accuracy.
+    Weekly reviews identify patterns for life design decisions.
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    campaign_id:
+      $ref: './common.yaml#/EntityId'
+      description: Campaign this log is associated with (optional)
+
+    # ============================================
+    # Activity Details
+    # ============================================
+    activity:
+      type: string
+      minLength: 5
+      maxLength: 200
+      description: What activity was being done
+      example: "Pair programming on API design"
+
+    category:
+      type: string
+      maxLength: 50
+      description: Custom category for grouping
+      example: "Technical Work"
+
+    life_area:
+      $ref: './common.yaml#/LifeArea'
+      description: Which life area this activity falls under
+
+    work_category:
+      $ref: './common.yaml#/WorkCategory'
+      description: |
+        Subcategory when life_area is "work". Enables granular analysis
+        of Work activities (career vs admin vs domestic).
+
+        Only applicable when life_area == "work". Should be null/omitted
+        for other life areas.
+
+        Examples:
+        - Job interview prep → career
+        - Paying bills → admin
+        - Doing laundry → domestic
+
+    # ============================================
+    # Energy Assessment
+    # ============================================
+    energy_level:
+      $ref: './common.yaml#/EnergyLevel'
+      description: Net energy impact (-5 to +5)
+
+    flow_state:
+      $ref: './common.yaml#/FlowState'
+      description: Whether flow state was achieved
+
+    engagement:
+      type: integer
+      minimum: 1
+      maximum: 10
+      description: |
+        How engaged were you? (1-10)
+        1 = completely checked out
+        10 = fully immersed
+      example: 8
+
+    # ============================================
+    # Context
+    # ============================================
+    context:
+      type: object
+      description: Situational factors
+      properties:
+        time_of_day:
+          type: string
+          enum:
+            - morning
+            - midday
+            - afternoon
+            - evening
+            - night
+        day_of_week:
+          type: string
+          enum:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+        duration_minutes:
+          type: integer
+          minimum: 1
+          description: How long the activity lasted
+        environment:
+          type: string
+          maxLength: 100
+          description: Where/how (e.g., "home office", "coffee shop")
+        social_context:
+          type: string
+          enum:
+            - alone
+            - pair
+            - small_group
+            - large_group
+          description: Who you were with
+      example:
+        time_of_day: "morning"
+        day_of_week: "tuesday"
+        duration_minutes: 90
+        environment: "home office"
+        social_context: "pair"
+
+    # ============================================
+    # AEIOU Framework (Core DYL Methodology)
+    # ============================================
+    aeiou:
+      type: object
+      description: |
+        AEIOU Framework for deep energy analysis.
+        This structured approach helps identify WHY activities
+        are energizing or draining by examining five dimensions.
+      properties:
+        activity:
+          type: string
+          maxLength: 200
+          description: |
+            What were you actually doing?
+            Be specific about the task, not the job title.
+          example: "Debugging a race condition in the payment service"
+        environment:
+          type: string
+          maxLength: 200
+          description: |
+            Where were you? What was the physical/virtual setting?
+            Include noise level, lighting, space type.
+          example: "Quiet home office, dual monitors, good natural light"
+        interaction:
+          type: string
+          maxLength: 200
+          description: |
+            Who were you with? What was the social dynamic?
+            Consider collaboration style, communication patterns.
+          example: "1:1 pair programming with junior engineer"
+        objects:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+          maxItems: 10
+          description: |
+            What tools, devices, or artifacts were you using?
+            Both physical and digital.
+          example:
+            - "IDE with copilot"
+            - "Whiteboard for diagrams"
+            - "Slack for async updates"
+        users:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+          maxItems: 10
+          description: |
+            Who were you serving or affecting?
+            End users, stakeholders, team members.
+          example:
+            - "Junior engineer learning"
+            - "Customers experiencing payment issues"
+      example:
+        activity: "System design discussion"
+        environment: "Video call from home office"
+        interaction: "1:1 with senior engineer"
+        objects: ["Excalidraw", "Zoom"]
+        users: ["Team members", "Future maintainers"]
+
+    # ============================================
+    # Observations
+    # ============================================
+    highlights:
+      type: array
+      items:
+        type: string
+        maxLength: 200
+      maxItems: 5
+      description: What was particularly energizing
+      example:
+        - "Creative problem-solving"
+        - "Teaching someone new"
+
+    drains:
+      type: array
+      items:
+        type: string
+        maxLength: 200
+      maxItems: 5
+      description: What was draining
+      example:
+        - "Waiting for slow build"
+        - "Repetitive documentation"
+
+    notes:
+      type: string
+      maxLength: 1000
+      description: Additional observations
+
+    # ============================================
+    # Pattern Recognition
+    # ============================================
+    tags:
+      type: array
+      items:
+        type: string
+        maxLength: 30
+      maxItems: 10
+      description: Tags for pattern analysis
+      example: ["collaboration", "creative", "technical"]
+
+    recurring:
+      type: boolean
+      default: false
+      description: Is this a recurring activity?
+
+    prototype_id:
+      $ref: './common.yaml#/EntityId'
+      description: |
+        If this energy log is from a prototype, link it.
+        Helps correlate prototypes with energy impact.
+
+    # ============================================
+    # Timestamps
+    # ============================================
+    logged_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the activity occurred
+
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+  required:
+    - id
+    - activity
+    - life_area
+    - energy_level
+    - logged_at
+    - created_at
+    - updated_at
+
+# ============================================
+# Energy Log Creation Request
+# ============================================
+
+EnergyLogCreate:
+  type: object
+  properties:
+    campaign_id:
+      $ref: './common.yaml#/EntityId'
+    activity:
+      type: string
+      minLength: 5
+      maxLength: 200
+    category:
+      type: string
+      maxLength: 50
+    life_area:
+      $ref: './common.yaml#/LifeArea'
+    work_category:
+      $ref: './common.yaml#/WorkCategory'
+      description: Subcategory when life_area is "work" (career, admin, domestic)
+    energy_level:
+      $ref: './common.yaml#/EnergyLevel'
+    flow_state:
+      $ref: './common.yaml#/FlowState'
+    engagement:
+      type: integer
+      minimum: 1
+      maximum: 10
+    context:
+      type: object
+      properties:
+        time_of_day:
+          type: string
+        day_of_week:
+          type: string
+        duration_minutes:
+          type: integer
+        environment:
+          type: string
+        social_context:
+          type: string
+    highlights:
+      type: array
+      items:
+        type: string
+      maxItems: 5
+    drains:
+      type: array
+      items:
+        type: string
+      maxItems: 5
+    notes:
+      type: string
+      maxLength: 1000
+    tags:
+      type: array
+      items:
+        type: string
+      maxItems: 10
+    recurring:
+      type: boolean
+    prototype_id:
+      $ref: './common.yaml#/EntityId'
+    logged_at:
+      $ref: './common.yaml#/Timestamp'
+  required:
+    - activity
+    - life_area
+    - energy_level
+
+# ============================================
+# Energy Pattern Analysis Response
+# ============================================
+
+EnergyPattern:
+  type: object
+  description: Computed energy patterns from logs
+  properties:
+    period:
+      type: string
+      description: Analysis period
+      example: "2025-01 to 2025-03"
+    total_logs:
+      type: integer
+      minimum: 0
+    average_energy:
+      type: number
+      description: Mean energy level across all logs
+    by_life_area:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          count:
+            type: integer
+          average_energy:
+            type: number
+          top_energizers:
+            type: array
+            items:
+              type: string
+          top_drainers:
+            type: array
+            items:
+              type: string
+    by_time_of_day:
+      type: object
+      additionalProperties:
+        type: number
+      description: Average energy by time of day
+    by_context:
+      type: object
+      additionalProperties:
+        type: number
+      description: Average energy by social context
+    flow_frequency:
+      type: number
+      description: Percentage of activities with full flow state
+    top_energizers:
+      type: array
+      items:
+        type: object
+        properties:
+          activity:
+            type: string
+          average_energy:
+            type: number
+          frequency:
+            type: integer
+    top_drainers:
+      type: array
+      items:
+        type: object
+        properties:
+          activity:
+            type: string
+          average_energy:
+            type: number
+          frequency:
+            type: integer

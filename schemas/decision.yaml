@@ -1,0 +1,333 @@
+# Decision Schema
+# Formal choice points with documented rationale
+
+Decision:
+  type: object
+  description: |
+    A Decision records a formal choice point in the life design process.
+    Decisions document the reasoning, evidence, and outcome of major choices.
+
+    ## DYL Principles Applied
+
+    - **Prototyping**: Decisions should be informed by prototype evidence
+    - **Failure Immunity**: Decision to not pursue something is valid
+    - **Bias to Action**: Decide and move forward vs. endless analysis
+    - **Wayfinding**: Decisions can be revisited as new data emerges
+
+    ## Decision Types
+
+    | Type | Description | Example |
+    |------|-------------|---------|
+    | commitment | Moving forward | "Accepting startup offer" |
+    | pivot | Changing direction | "Shifting focus to remote roles" |
+    | rejection | Not pursuing | "Declining large company offers" |
+    | pause | Temporary hold | "Pausing search for family reasons" |
+    | escalation | Need more data | "Can't decide yet, need more prototypes" |
+
+    ## Confidence Levels
+
+    Lower confidence is acceptable for early decisions. High-stakes
+    decisions should be informed by strong evidence.
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    campaign_id:
+      $ref: './common.yaml#/EntityId'
+      description: Campaign this decision belongs to
+
+    # ============================================
+    # Core Content
+    # ============================================
+    title:
+      type: string
+      minLength: 5
+      maxLength: 200
+      description: What decision is being made
+      example: "Commit to startup path vs. large company"
+
+    description:
+      $ref: './common.yaml#/Markdown'
+      description: Full context and reasoning
+
+    type:
+      $ref: './common.yaml#/DecisionType'
+
+    # ============================================
+    # Options Considered
+    # ============================================
+    options:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            maxLength: 100
+            description: Option name
+          description:
+            type: string
+            maxLength: 500
+          pros:
+            type: array
+            items:
+              type: string
+              maxLength: 200
+            maxItems: 10
+          cons:
+            type: array
+            items:
+              type: string
+              maxLength: 200
+            maxItems: 10
+          evidence_ids:
+            type: array
+            items:
+              $ref: './common.yaml#/EntityId'
+            description: Evidence supporting/informing this option
+          selected:
+            type: boolean
+            default: false
+            description: Was this option chosen?
+        required:
+          - name
+      minItems: 2
+      maxItems: 10
+      description: Options that were considered
+      example:
+        - name: "Accept startup offer"
+          pros: ["High autonomy", "Equity upside", "Learning opportunity"]
+          cons: ["Lower base salary", "More risk", "Longer hours"]
+          selected: true
+        - name: "Continue big company search"
+          pros: ["Higher base", "More stability"]
+          cons: ["Less autonomy", "Slower pace"]
+          selected: false
+
+    # ============================================
+    # Selected Option
+    # ============================================
+    selected_option:
+      type: string
+      maxLength: 100
+      description: Name of the selected option
+      example: "Accept startup offer"
+
+    rationale:
+      type: string
+      maxLength: 2000
+      description: |
+        Why this option was selected.
+        Should reference evidence and align with values.
+      example: "Prototype conversations consistently showed I valued autonomy and learning over stability. Energy logs from similar work environments were highly positive."
+
+    # ============================================
+    # Evidence & Confidence
+    # ============================================
+    confidence:
+      $ref: './common.yaml#/DecisionConfidence'
+
+    supporting_evidence_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: Key evidence that informed this decision
+
+    hypothesis_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: Hypotheses this decision validates/invalidates
+
+    # ============================================
+    # Life Balance Impact
+    # ============================================
+    expected_impact:
+      type: object
+      description: Expected impact on life areas
+      properties:
+        work:
+          type: integer
+          minimum: -5
+          maximum: 5
+          description: Expected change in work satisfaction
+        play:
+          type: integer
+          minimum: -5
+          maximum: 5
+        love:
+          type: integer
+          minimum: -5
+          maximum: 5
+        health:
+          type: integer
+          minimum: -5
+          maximum: 5
+        notes:
+          type: string
+          maxLength: 500
+      example:
+        work: 3
+        play: -1
+        love: 0
+        health: -1
+        notes: "Trading some leisure time for more engaging work"
+
+    # ============================================
+    # Follow-up
+    # ============================================
+    next_steps:
+      type: array
+      items:
+        type: string
+        maxLength: 200
+      maxItems: 10
+      description: Concrete actions following this decision
+      example:
+        - "Sign offer letter by Friday"
+        - "Give 2 weeks notice at current job"
+        - "Set up 30/60/90 day check-in"
+
+    reversibility:
+      type: string
+      enum:
+        - easily_reversible    # Can undo with minimal cost
+        - reversible           # Can undo but with some cost
+        - partially_reversible # Some aspects can be undone
+        - irreversible         # Cannot be undone
+      description: How reversible is this decision?
+      example: "reversible"
+
+    review_date:
+      $ref: './common.yaml#/DateOnly'
+      description: When to review if this decision is still right
+      example: "2025-06-01"
+
+    # ============================================
+    # Timestamps
+    # ============================================
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+    decided_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the decision was made
+
+    # ============================================
+    # Review/Outcome (post-decision)
+    # ============================================
+    outcome:
+      type: object
+      description: Filled in during review (after decision plays out)
+      properties:
+        reviewed_at:
+          $ref: './common.yaml#/Timestamp'
+        assessment:
+          type: string
+          enum:
+            - excellent    # Exceeded expectations
+            - good         # Met expectations
+            - acceptable   # Okay but not great
+            - poor         # Below expectations
+            - regret       # Would choose differently
+          description: How did this decision work out?
+        actual_impact:
+          type: object
+          description: Actual impact vs. expected
+          properties:
+            work:
+              type: integer
+              minimum: -5
+              maximum: 5
+            play:
+              type: integer
+              minimum: -5
+              maximum: 5
+            love:
+              type: integer
+              minimum: -5
+              maximum: 5
+            health:
+              type: integer
+              minimum: -5
+              maximum: 5
+        learnings:
+          type: string
+          maxLength: 1000
+          description: What did you learn from this decision?
+        would_change:
+          type: string
+          maxLength: 500
+          description: What would you do differently?
+
+  required:
+    - id
+    - campaign_id
+    - title
+    - type
+    - options
+    - created_at
+    - updated_at
+
+# ============================================
+# Decision Creation Request
+# ============================================
+
+DecisionCreate:
+  type: object
+  properties:
+    title:
+      type: string
+      minLength: 5
+      maxLength: 200
+    description:
+      $ref: './common.yaml#/Markdown'
+    type:
+      $ref: './common.yaml#/DecisionType'
+    options:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          description:
+            type: string
+          pros:
+            type: array
+            items:
+              type: string
+          cons:
+            type: array
+            items:
+              type: string
+          evidence_ids:
+            type: array
+            items:
+              type: string
+        required:
+          - name
+      minItems: 2
+  required:
+    - title
+    - type
+    - options
+
+# ============================================
+# Decision List Response
+# ============================================
+
+DecisionList:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/Decision'
+    total:
+      type: integer
+      minimum: 0

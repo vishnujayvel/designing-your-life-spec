@@ -1,0 +1,233 @@
+# Task Schema - Lightweight, Token-Efficient
+# Provider-agnostic abstraction for Asana, Todoist, Things, etc.
+
+Task:
+  type: object
+  description: |
+    Lightweight task for LLM consumption.
+    ~40-60 tokens per task vs ~150-300 for raw Asana API.
+  required:
+    - id
+    - name
+  properties:
+    id:
+      type: string
+      description: Unique task identifier (provider's ID)
+      example: "1234567890"
+
+    name:
+      type: string
+      description: Task title
+      example: "Prepare system design notes for Hooli interview"
+
+    due:
+      type: string
+      format: date-time
+      description: Due date/time in ISO 8601 (null if no due date)
+      example: "2025-12-29T17:00:00-08:00"
+
+    completed:
+      type: boolean
+      default: false
+      description: Whether task is completed
+
+    completed_at:
+      type: string
+      format: date-time
+      description: When task was completed (null if not completed)
+
+    priority:
+      type: string
+      enum: [high, medium, low, none]
+      default: none
+      description: Task priority level
+
+    project:
+      type: string
+      description: Project/list name this task belongs to
+      example: "Job Search 2025"
+
+    tags:
+      type: array
+      items:
+        type: string
+      description: Tags/labels attached to task
+      example: ["interview", "hooli", "system-design"]
+
+    energy:
+      type: string
+      enum: [high, medium, low]
+      description: |
+        Energy level required (DYL-specific).
+        May be inferred from tags or custom field.
+
+    life_area:
+      type: string
+      enum: [work, play, love, health]
+      description: |
+        DYL life area (optional).
+        Inferred from project or tags.
+
+    prototype_id:
+      type: string
+      description: |
+        Link to DYL Prototype if this task supports an experiment.
+        Null for routine tasks not tied to prototypes.
+
+TaskList:
+  type: object
+  description: List of tasks with summary metadata
+  required:
+    - tasks
+    - count
+  properties:
+    tasks:
+      type: array
+      items:
+        $ref: '#/Task'
+
+    count:
+      type: integer
+      description: Total number of tasks
+
+    today_count:
+      type: integer
+      description: Tasks due today
+
+    overdue_count:
+      type: integer
+      description: Tasks past due date
+
+    by_project:
+      type: object
+      description: Count by project
+      additionalProperties:
+        type: integer
+      example:
+        "Job Search 2025": 8
+        "Health": 3
+
+    by_life_area:
+      type: object
+      description: Count by DYL life area
+      additionalProperties:
+        type: integer
+      example:
+        work: 10
+        play: 2
+        health: 3
+        love: 1
+
+Routine:
+  type: object
+  description: |
+    Recurring task pattern (not a single task instance).
+    Examples: "Walk the dog", "Weekly meal prep", "Morning standup"
+  required:
+    - id
+    - name
+    - frequency
+  properties:
+    id:
+      type: string
+      description: Routine identifier
+
+    name:
+      type: string
+      description: Routine name
+      example: "Walk the dog"
+
+    frequency:
+      type: string
+      enum: [daily, weekly, biweekly, monthly, custom]
+      description: How often this routine occurs
+
+    life_area:
+      type: string
+      enum: [work, play, love, health]
+      description: Which life area this routine serves
+
+    energy_impact:
+      type: string
+      enum: [energizing, neutral, draining]
+      description: |
+        How this routine typically affects energy.
+        Tracked over time from EnergyLogs.
+
+    active:
+      type: boolean
+      default: true
+      description: Whether routine is currently active
+
+Activity:
+  type: object
+  description: |
+    One-time or occasional activity that is NOT an experiment.
+    Distinction from Prototype: Activities execute; Prototypes test hypotheses.
+
+    Examples:
+    - "Buy groceries for the week" (domestic, one-time)
+    - "Family dinner on Sunday" (love, occasional)
+    - "Oil change for car" (admin, as-needed)
+  required:
+    - id
+    - name
+    - life_area
+  properties:
+    id:
+      type: string
+
+    name:
+      type: string
+      example: "Weekly grocery shopping"
+
+    life_area:
+      type: string
+      enum: [work, play, love, health]
+
+    work_category:
+      type: string
+      enum: [career, admin, domestic]
+      description: Subcategory when life_area is "work"
+
+    scheduled_for:
+      type: string
+      format: date-time
+      description: When this activity is planned (optional)
+
+    completed:
+      type: boolean
+      default: false
+
+    energy_logged:
+      type: boolean
+      default: false
+      description: Whether energy was captured for this activity
+
+# Mapping from Asana API to Task
+#
+# Asana Field           -> Task Field
+# -------------------------------------------
+# gid                   -> id
+# name                  -> name
+# due_at / due_on       -> due
+# completed             -> completed
+# completed_at          -> completed_at
+# projects[0].name      -> project
+# tags[].name           -> tags
+# custom_fields.energy  -> energy (if configured)
+# custom_fields.area    -> life_area (if configured)
+#
+# DROPPED (token savings):
+# - assignee (single-user system)
+# - assignee_status (deprecated)
+# - followers (collaboration feature)
+# - hearts/likes (social feature)
+# - memberships (redundant with projects)
+# - notes (separate fetch if needed)
+# - html_notes (rich text)
+# - num_hearts/num_likes (counts)
+# - parent (subtasks handled separately)
+# - workspace (single-workspace)
+# - resource_type (always "task")
+# - permalink_url (can construct)

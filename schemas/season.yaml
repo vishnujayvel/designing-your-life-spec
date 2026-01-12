@@ -1,0 +1,337 @@
+# Season Schema
+# Temporal container for "seasons of balance" in life design
+# Supports burst mode for high-intensity periods (job search, health recovery, etc.)
+
+Season:
+  type: object
+  description: |
+    A Season represents a temporal period with intentional focus on specific life areas.
+
+    ## DYL Methodology Context
+
+    The DYL methodology rejects static equilibrium (25% to each life area) as attainable
+    or desirable at all times. Instead, life occurs in "Seasons" where different areas
+    naturally dominate.
+
+    ## Burst Mode
+
+    When burst_mode is enabled:
+    - Dashboard validation suppresses "Low Play" or "Low Balance" warnings
+    - System allows higher daily limits for Work activities without flagging as dysfunctional
+    - The 28/40 capacity soft cap is relaxed (with documented justification)
+
+    ## Duration Constraints
+
+    - Default burst limit: 14 days (intensive sprint)
+    - Maximum burst limit: 12 weeks (extended campaign)
+    - Bursts exceeding planned duration trigger "Forced Recovery" protocol
+
+  required:
+    - id
+    - name
+    - start_date
+    - primary_focus
+    - status
+
+  # JSON Schema 2020-12 conditional requirements
+  # When burst_mode is true, require end_date, planned_recovery_days, and justification
+  if:
+    properties:
+      burst_mode:
+        const: true
+  then:
+    required:
+      - end_date
+      - planned_recovery_days
+      - justification
+
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the season
+      example: "season-2025-job-search"
+
+    name:
+      type: string
+      minLength: 3
+      maxLength: 100
+      description: Human-readable name for the season
+      example: "Job Search Campaign - Q1 2025"
+
+    description:
+      type: string
+      maxLength: 500
+      description: Context explaining the season's purpose and focus
+      example: "Intensive job search period after leaving previous role. Focus on networking, applications, and interview preparation."
+
+    start_date:
+      type: string
+      format: date
+      description: When this season begins
+      example: "2025-01-01"
+
+    end_date:
+      type: string
+      format: date
+      description: |
+        When this season ends (or is expected to end).
+        Required for burst_mode seasons to enforce recovery.
+      example: "2025-03-31"
+
+    primary_focus:
+      $ref: './common.yaml#/LifeArea'
+      description: |
+        The life area receiving primary attention during this season.
+        Other areas may intentionally receive less attention.
+
+    secondary_focuses:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+      maxItems: 2
+      description: Optional additional focus areas (up to 2)
+      example: ["health"]
+
+    status:
+      type: string
+      description: Current lifecycle state of the season
+      oneOf:
+        - const: planned
+          title: Planned
+          description: |
+            Future season, not yet started.
+            Examples:
+            - "Job search season planned for January"
+            - "Health focus season after the holidays"
+            Next: Transitions to 'active' when start_date is reached.
+        - const: active
+          title: Active
+          description: |
+            Currently in this season. Primary focus receives priority.
+            Examples:
+            - Currently in job search sprint
+            - Health recovery period in progress
+            Key indicators:
+            - Balance overrides are in effect
+            - Dashboard validation uses season-specific thresholds
+        - const: paused
+          title: Paused
+          description: |
+            Temporarily suspended. Will resume later.
+            Examples:
+            - Job search paused for family emergency
+            - Health focus paused for work deadline
+            Important: Document pause reason and expected resume date.
+        - const: completed
+          title: Completed
+          description: |
+            Season ended normally. Acceptance criteria met or end_date reached.
+            Examples:
+            - Job search ended with offer acceptance
+            - Health recovery goals achieved
+            Next: Schedule recovery period if burst_mode was true.
+        - const: extended
+          title: Extended
+          description: |
+            Duration extended beyond original end_date. Requires justification.
+            Examples:
+            - Job search extended 2 weeks due to pending final rounds
+            - Health recovery taking longer than expected
+            Warning: Monitor for burnout if burst_mode was true.
+            Required: New end_date and updated justification.
+      example: "active"
+
+    burst_mode:
+      type: boolean
+      default: false
+      description: |
+        When true, this season represents a high-intensity period where:
+        - Balance warnings are suppressed for the primary_focus area
+        - The 28/40 capacity soft cap is relaxed
+        - Work hours limits are increased
+
+        Burst mode REQUIRES an end_date and planned_recovery_period.
+
+    burst_duration_limit_days:
+      type: integer
+      minimum: 7
+      maximum: 84
+      default: 14
+      description: |
+        Maximum burst length in days.
+        Default: 14 days (intensive sprint).
+        Maximum: 84 days (12 weeks, extended campaign).
+        System enforces "Forced Recovery" if exceeded.
+      example: 28
+
+    planned_recovery_days:
+      type: integer
+      minimum: 1
+      maximum: 30
+      description: |
+        Required when burst_mode is true.
+        How many days of recovery after the burst ends.
+        Minimum recommended: 3 days.
+      example: 7
+
+    acceptance_criteria:
+      type: array
+      items:
+        type: string
+      minItems: 1
+      description: |
+        What needs to happen for this season to be considered complete.
+        Provides objective endpoints rather than indefinite continuation.
+      example:
+        - "Accepted a job offer"
+        - "Completed 3 months in new role"
+        - "Decided to pivot approach if no offers by week 8"
+
+    balance_overrides:
+      type: object
+      description: |
+        Explicit overrides for balance validation during this season.
+        Prevents false positive warnings for intentional imbalance.
+      properties:
+        suppress_low_warnings:
+          type: array
+          items:
+            $ref: './common.yaml#/LifeArea'
+          description: Areas where low scores won't trigger warnings
+          example: ["play", "love"]
+        minimum_floor:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+            maximum: 10
+          description: |
+            Minimum acceptable scores per area during this season.
+            Even in burst mode, health should rarely go below 4.
+          example:
+            health: 4
+            play: 2
+        capacity_override:
+          type: integer
+          minimum: 28
+          maximum: 36
+          description: |
+            Override for the 28/40 soft cap during this season.
+            Maximum 36/40 to prevent complete unsustainability.
+          example: 32
+
+    campaign_id:
+      type: string
+      format: uuid
+      description: |
+        Optional link to the Campaign this season supports.
+        A job search season naturally links to a career transition campaign.
+
+    justification:
+      type: string
+      maxLength: 500
+      description: |
+        Required for burst_mode or capacity_override.
+        Documents why this intensive period is necessary and sustainable.
+      example: "Job search requires intensive networking and interview preparation. Recovery planned for April after offer acceptance."
+
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+    updated_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+    metadata:
+      type: object
+      additionalProperties: true
+      description: Additional context or tracking data
+
+  x-ai-instructions: |
+    When a Season with burst_mode=true is active:
+    1. Suppress "Low Balance" warnings for areas in suppress_low_warnings
+    2. Use minimum_floor instead of standard thresholds for crisis detection
+    3. Allow capacity_override instead of strict 28/40 limit
+    4. Track burst duration and warn if approaching burst_duration_limit_days
+    5. When season ends, prompt for recovery assessment and rebalancing
+    6. If burst exceeds limit, trigger "Forced Recovery" protocol
+
+    Validation rules:
+    - burst_mode=true REQUIRES: end_date, planned_recovery_days, justification
+    - end_date must be >= start_date
+    - (end_date - start_date) must be <= burst_duration_limit_days
+
+  x-ai-examples:
+    - scenario: "User starting intensive job search"
+      season:
+        name: "Q1 2025 Job Search Sprint"
+        primary_focus: "work"
+        burst_mode: true
+        burst_duration_limit_days: 42
+        planned_recovery_days: 7
+        end_date: "2025-02-15"
+        justification: "Need to secure new role before savings run out. Have support from partner during this period."
+        balance_overrides:
+          suppress_low_warnings: ["play"]
+          minimum_floor:
+            health: 5
+            love: 4
+          capacity_override: 32
+        acceptance_criteria:
+          - "Accepted a job offer"
+          - "Reached 3 final-round interviews"
+          - "Pivot strategy if no offers by week 6"
+
+    - scenario: "Health recovery after injury"
+      season:
+        name: "Post-Surgery Recovery"
+        primary_focus: "health"
+        burst_mode: true
+        burst_duration_limit_days: 56
+        planned_recovery_days: 14
+        justification: "Doctor-mandated recovery period. Work reduced to essential maintenance only."
+        balance_overrides:
+          suppress_low_warnings: ["work", "play"]
+          minimum_floor:
+            health: 8
+            love: 5
+
+# Season Status Transitions
+SeasonStatusTransition:
+  type: object
+  description: Valid state transitions for seasons
+  properties:
+    from:
+      type: string
+      enum: [planned, active, paused, completed, extended]
+    to:
+      type: string
+      enum: [planned, active, paused, completed, extended]
+    requires:
+      type: array
+      items:
+        type: string
+      description: Conditions required for this transition
+  x-transitions:
+    - from: planned
+      to: active
+      requires: ["start_date reached", "user confirmation"]
+    - from: active
+      to: paused
+      requires: ["pause reason documented"]
+    - from: active
+      to: completed
+      requires: ["at least one acceptance_criteria met OR end_date reached"]
+    - from: active
+      to: extended
+      requires: ["justification for extension", "new end_date", "burst_duration within limits"]
+    - from: paused
+      to: active
+      requires: ["resume reason documented"]
+    - from: extended
+      to: completed
+      requires: ["acceptance_criteria met OR extended end_date reached"]

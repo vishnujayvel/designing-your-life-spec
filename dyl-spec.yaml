@@ -1,0 +1,414 @@
+# Designing Your Life (DYL) Framework Specification
+# OpenAPI 3.1.0 | Language-Agnostic Standard
+#
+# This specification defines the data contracts and behavioral rules for implementing
+# the "Designing Your Life" methodology as software. It is framework-agnostic and can
+# be implemented in any programming language.
+#
+# Based on: "Designing Your Life" by Bill Burnett & Dave Evans
+# Spec Version: 2.1.0
+# Last Updated: 2025-12-27
+#
+# Version 2.1 Changes (ChatGPT Deep Research Recommendations):
+# - Added OdysseyPlan entity for 3 alternative life paths (Plan A, B, C)
+# - Added Compass entity for Workview/Lifeview coherence checks
+# - Fixed LifeChallenge polymorphism with proper oneOf composition
+# - Added if/then constraints for Season burst_mode requirements
+# - Changed duration format from ISO 8601 to numeric days (better tooling support)
+# - Enhanced NetworkConnection with actionability fields (priority, next_action, due_date)
+# - Renamed x-ai-hint to x-ai-instructions for clearer semantics
+# - Added x-ai-examples throughout for few-shot learning
+# - Made anti-pattern thresholds configurable (per Campaign/Season)
+# - Added LifeChallengeBase for proper inheritance
+#
+# Version 2.0 Changes (Gemini Deep Research Recommendations):
+# - Added Season entity for temporal balance with burst_mode
+# - Added LifeChallenge polymorphic schema (Anchor vs Gravity problems)
+# - Added NetworkConnection entity for weak ties tracking
+# - Added FailureLog entity for failure immunity building
+# - Added Black Hole anti-pattern detection for job applications
+# - Enhanced LifeBalance with sentiment and sub-dimensions
+# - Added x-ai-hint extensions throughout for AI agent guidance
+
+openapi: 3.1.0
+
+info:
+  title: Designing Your Life (DYL) Framework Specification
+  version: 2.1.0
+  description: |
+    A language-agnostic specification for implementing the "Designing Your Life"
+    methodology as software. This specification provides:
+
+    ## Core Concepts
+
+    The DYL framework helps people design fulfilling lives through iterative
+    experimentation rather than rigid planning. Key principles:
+
+    - **Wayfinding** - Navigate without a fixed destination; adjust based on learning
+    - **Energy Mapping** - Track what activities energize vs. drain you
+    - **Coherence** - Align work, play, love, and health
+    - **Prototyping** - Test life hypotheses through small experiments
+    - **Life Balance** - Maintain engagement across all life areas
+    - **Reframing** - Transform problems into opportunities
+    - **Failure Immunity** - Treat failures as data points for learning
+    - **Bias to Action** - Value experimentation over analysis paralysis
+
+    ## Entity Hierarchy
+
+    ![Entity Hierarchy](https://kroki.io/mermaid/svg/eNpNj0EOgyAQRfeewgvYI3SDNC5IY2J3ExfUTnFSOxDANt6-iqb6E2bxIPw3mfHa9fmtzPI5AoR-O02G27woznkF1eRs7DFQaNOLKvEaam-jjZPDFdcJS5AfeiB3GxWJCsswnxC9Jo7HG6lAMnozKWuOvIQSOwpk-UgbaDDsMI0w3tcFmtE56yOxSXyJEqDoiaLXw4BsNqclVwFXjF_rX7MXYxf_ny65KLhoGkaPfy3kx94525wWnb3xB5teW2g=)
+
+    The Campaign is the top-level container. Each campaign contains hypotheses to test,
+    which are validated through prototypes that generate evidence.
+
+    ## Use Cases
+
+    This specification can be used for:
+    - Career transitions and job searches
+    - Location/lifestyle changes
+    - Business/startup exploration
+    - Relationship development
+    - Any major life decision requiring experimentation
+
+    ## Campaign Lifecycle
+
+    ![Campaign Lifecycle](https://kroki.io/mermaid/svg/eNrjKi5JLEl1yUxML0rM1S0z4lIAgmitWAVdXTuFxOSSzLJUsBCECRYtSCwtTk2xUnAqSk3MBktCRJC0WCkEpRaX5mJqzSzLLwHpDQAxIHohQmia0_KTS4vRdSfn5xbkpIL1u-TnYRiemJSYlwIUB0oHl-QXgKXhWsAqgP6CaIKphIsCAK4PTm8=)
+
+    A campaign starts **active** and can transition through various states based on
+    your learning journey. Pivots are celebrated - they mean you learned something!
+
+    ## The Learning Loop
+
+    ![Learning Loop](https://kroki.io/mermaid/svg/eNptzUEKwyAQheG9p5gL5ArdCQa6EEuzGbKQOG2EoKKTQMDDRySbQmf5zwdPfLNNKzyNgHYK1Zkir1R8mWEYHqBR58iRz0RzJ7pnifLwjsJyV9lrfe0pxcylwoST3byzTO5HGPrsTA2MOIbjL3mHZSObKxhs2od7wvSvEhfA8zTd)
+
+    This is the heart of DYL: Form a hypothesis → Run a prototype → Collect evidence →
+    Learn and iterate. Invalidated hypotheses aren't failures - they're valuable data!
+
+    ## Prototype Types
+
+    ![Prototype Types](https://kroki.io/mermaid/svg/eNpljkEOgjAQRfecohdgwQVMFEnEWEqUsJmwGLBYojCkrRhvb6GsZBZ_8_7PvOChcVSsOAbMXV5ArsmS_Y7SVCwMdywWWQkxDZPUBm1HQ7U2FyoONxC1kXraspRzSPve7f5JUu4vkEz4em9XPI2vAnjXaAqtNNbDJWYV7xQ5o7aVkjUK14Yz8UYRnKlmRuGdPh45ES8UwQmbJ1o1__wBsGtHCw==)
+
+    Different prototypes for different questions. Start with **conversations** (lowest
+    commitment), work up to **immersion** (highest learning).
+
+    ## Anchor vs Gravity Problems
+
+    ![Anchor vs Gravity](https://kroki.io/mermaid/svg/eNpNjE0OgjAQRvecYi7gFTRNTdBN1YaYkIbFWIefWIspA4aId5cUFs7yvfdNUrr2bWsMDNk-gfkuRtboHPmKCthstiA-Ej00DHM2w903ZiK6KacObj1Dx719TCCUEUoeTrr4j1Q7zzsIhK7hcYJUm1SL6zHL10zFThtNZcAnLVRHeDZZGAEdU_DIzUDdYtNFC2mEtfTi9ZOMVBmFQ1MhE2Boe38vkh9DzEPj)
+
+    **Critical distinction!** Anchor problems are solvable (you're just stuck on one approach).
+    Gravity problems are unchangeable facts of life (accept and navigate around them).
+
+    ## Meet the Characters
+
+    Throughout this spec, you'll find examples featuring **two people** navigating
+    very different life design challenges. This shows how the DYL framework applies
+    across any domain.
+
+    ### The Tech Worker
+
+    A software engineer at **Hooli** (the corporate giant) wondering if the grass
+    is greener at **Pied Piper** (the scrappy startup). Their campaign explores:
+    - *"Would I thrive in startup chaos or corporate stability?"*
+    - *"Is remote work actually better for my productivity?"*
+    - *"Should I stay IC or move into management?"*
+
+    Prototypes include coffee chats with startup CTOs, hackathon weekends, and
+    shadowing sessions.
+
+    ### Carmy Berzatto (The Bear)
+
+    A fine dining chef who returns to Chicago to run his late brother's Italian
+    beef sandwich shop, **The Original Beef of Chicagoland**. Inspired by the TV
+    show "The Bear," his campaign explores:
+    - *"Can fine dining techniques transform a sandwich shop without losing its soul?"*
+    - *"How do I develop my existing team rather than replacing them?"*
+    - *"How do I honor my brother's legacy while building something new?"*
+
+    Prototypes include menu experiments (handmade pasta specials), observation
+    sessions (watching Richie work the window), and debrief conversations
+    (talking systems with Sydney).
+
+    > **Why two characters?** Life design isn't just for career pivots. The framework
+    > works whether you're debugging code or plating pasta. Same methodology,
+    > different domains.
+
+  contact:
+    name: DYL Framework Maintainers
+    url: https://github.com/designing-your-life-spec/dyl-spec
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+externalDocs:
+  description: Designing Your Life Book Reference
+  url: https://designingyour.life/
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: Campaign
+    description: |
+      Top-level container for a life design exploration. A campaign represents
+      a bounded period of experimentation around a life question or transition.
+  - name: Hypothesis
+    description: |
+      A belief or assumption about what might work in your life. Hypotheses
+      are tested through prototypes and validated by evidence.
+  - name: Prototype
+    description: |
+      A small experiment designed to test a hypothesis. Prototypes are
+      time-boxed, low-risk ways to gather real-world data.
+  - name: Evidence
+    description: |
+      Observations and learnings from prototypes. Evidence either supports,
+      refutes, or requires refinement of hypotheses.
+  - name: Constraint
+    description: |
+      Boundaries that shape what's possible. Constraints can be hard (immutable)
+      or soft (negotiable).
+  - name: EnergyLog
+    description: |
+      Tracking of engagement, flow, and energy levels across activities.
+      Used for identifying patterns and optimizing life design.
+  - name: Decision
+    description: |
+      Formal choice points with documented rationale. Decisions capture
+      the reasoning behind major pivots or commitments.
+  - name: Session
+    description: |
+      Coaching interaction records. Sessions track progress, insights,
+      and action items from structured check-ins.
+  - name: Season
+    description: |
+      Temporal balance management for intensive focus periods ("seasons" of life).
+      Supports burst_mode with automatic recovery prompts.
+  - name: LifeChallenge
+    description: |
+      Polymorphic problem classification: Anchor (reframable) vs Gravity (accept).
+      Uses OpenAPI 3.1 discriminator pattern.
+  - name: NetworkConnection
+    description: |
+      Professional/personal connection tracking with weak ties prioritization.
+      Based on Granovetter's "Strength of Weak Ties" theory.
+  - name: FailureLog
+    description: |
+      Systematic failure tracking for building "failure immunity".
+      Categorizes failures and extracts actionable insights.
+  - name: OdysseyPlan
+    description: |
+      Three alternative life paths explored in parallel (Plan A, B, C).
+      Core DYL exercise for discovering possibilities.
+  - name: Compass
+    description: |
+      Workview and Lifeview - personal philosophies that guide coherence checks.
+      The compass that helps evaluate alignment across life choices.
+  - name: Common
+    description: |
+      Shared types, enums, and base schemas used across all entities.
+
+# Schema documentation paths - expose all schemas in Swagger UI / Redoc
+paths:
+  $ref: './paths/documentation.yaml'
+
+components:
+  schemas:
+    # ============================================
+    # Common Types (referenced from schemas/common.yaml)
+    # ============================================
+    EntityId:
+      $ref: './schemas/common.yaml#/EntityId'
+    Timestamp:
+      $ref: './schemas/common.yaml#/Timestamp'
+    DateOnly:
+      $ref: './schemas/common.yaml#/DateOnly'
+    Markdown:
+      $ref: './schemas/common.yaml#/Markdown'
+    CampaignDomain:
+      $ref: './schemas/common.yaml#/CampaignDomain'
+    LifeArea:
+      $ref: './schemas/common.yaml#/LifeArea'
+    LifeBalance:
+      $ref: './schemas/common.yaml#/LifeBalance'
+    CampaignStatus:
+      $ref: './schemas/common.yaml#/CampaignStatus'
+    HypothesisStatus:
+      $ref: './schemas/common.yaml#/HypothesisStatus'
+    PrototypeStatus:
+      $ref: './schemas/common.yaml#/PrototypeStatus'
+    PrototypeType:
+      $ref: './schemas/common.yaml#/PrototypeType'
+    EvidenceType:
+      $ref: './schemas/common.yaml#/EvidenceType'
+    EvidenceStrength:
+      $ref: './schemas/common.yaml#/EvidenceStrength'
+    EvidenceDirection:
+      $ref: './schemas/common.yaml#/EvidenceDirection'
+    ConstraintType:
+      $ref: './schemas/common.yaml#/ConstraintType'
+    ConstraintCategory:
+      $ref: './schemas/common.yaml#/ConstraintCategory'
+    EnergyLevel:
+      $ref: './schemas/common.yaml#/EnergyLevel'
+    FlowState:
+      $ref: './schemas/common.yaml#/FlowState'
+    DecisionType:
+      $ref: './schemas/common.yaml#/DecisionType'
+    DecisionConfidence:
+      $ref: './schemas/common.yaml#/DecisionConfidence'
+    SessionType:
+      $ref: './schemas/common.yaml#/SessionType'
+    Error:
+      $ref: './schemas/common.yaml#/Error'
+    ValidationError:
+      $ref: './schemas/common.yaml#/ValidationError'
+    DYLViolation:
+      $ref: './schemas/common.yaml#/DYLViolation'
+
+    # ============================================
+    # Core Entities
+    # ============================================
+    Campaign:
+      $ref: './schemas/campaign.yaml#/Campaign'
+    CampaignCreate:
+      $ref: './schemas/campaign.yaml#/CampaignCreate'
+    CampaignUpdate:
+      $ref: './schemas/campaign.yaml#/CampaignUpdate'
+    CampaignList:
+      $ref: './schemas/campaign.yaml#/CampaignList'
+
+    Hypothesis:
+      $ref: './schemas/hypothesis.yaml#/Hypothesis'
+    HypothesisCreate:
+      $ref: './schemas/hypothesis.yaml#/HypothesisCreate'
+    HypothesisUpdate:
+      $ref: './schemas/hypothesis.yaml#/HypothesisUpdate'
+    HypothesisList:
+      $ref: './schemas/hypothesis.yaml#/HypothesisList'
+
+    Prototype:
+      $ref: './schemas/prototype.yaml#/Prototype'
+    PrototypeCreate:
+      $ref: './schemas/prototype.yaml#/PrototypeCreate'
+    PrototypeUpdate:
+      $ref: './schemas/prototype.yaml#/PrototypeUpdate'
+    PrototypeList:
+      $ref: './schemas/prototype.yaml#/PrototypeList'
+
+    Evidence:
+      $ref: './schemas/evidence.yaml#/Evidence'
+    EvidenceCreate:
+      $ref: './schemas/evidence.yaml#/EvidenceCreate'
+    EvidenceUpdate:
+      $ref: './schemas/evidence.yaml#/EvidenceUpdate'
+    EvidenceList:
+      $ref: './schemas/evidence.yaml#/EvidenceList'
+
+    # ============================================
+    # Supporting Entities
+    # ============================================
+    Constraint:
+      $ref: './schemas/constraint.yaml#/Constraint'
+    ConstraintCreate:
+      $ref: './schemas/constraint.yaml#/ConstraintCreate'
+    ConstraintList:
+      $ref: './schemas/constraint.yaml#/ConstraintList'
+
+    EnergyLog:
+      $ref: './schemas/energy-log.yaml#/EnergyLog'
+    EnergyLogCreate:
+      $ref: './schemas/energy-log.yaml#/EnergyLogCreate'
+    EnergyPattern:
+      $ref: './schemas/energy-log.yaml#/EnergyPattern'
+
+    Decision:
+      $ref: './schemas/decision.yaml#/Decision'
+    DecisionCreate:
+      $ref: './schemas/decision.yaml#/DecisionCreate'
+    DecisionList:
+      $ref: './schemas/decision.yaml#/DecisionList'
+
+    Session:
+      $ref: './schemas/session.yaml#/Session'
+    SessionCreate:
+      $ref: './schemas/session.yaml#/SessionCreate'
+    SessionList:
+      $ref: './schemas/session.yaml#/SessionList'
+
+    # ============================================
+    # Phase 3 Entities (Gemini Review Recommendations)
+    # ============================================
+    Season:
+      $ref: './schemas/season.yaml#/Season'
+    SeasonStatusTransition:
+      $ref: './schemas/season.yaml#/SeasonStatusTransition'
+
+    LifeChallenge:
+      $ref: './schemas/life-challenge.yaml#/LifeChallenge'
+    LifeChallengeBase:
+      $ref: './schemas/life-challenge.yaml#/LifeChallengeBase'
+    AnchorChallenge:
+      $ref: './schemas/life-challenge.yaml#/AnchorChallenge'
+    GravityChallenge:
+      $ref: './schemas/life-challenge.yaml#/GravityChallenge'
+    ReframeAttempt:
+      $ref: './schemas/life-challenge.yaml#/ReframeAttempt'
+
+    NetworkConnection:
+      $ref: './schemas/network-connection.yaml#/NetworkConnection'
+    NetworkConnectionMetrics:
+      $ref: './schemas/network-connection.yaml#/NetworkConnectionMetrics'
+
+    FailureLog:
+      $ref: './schemas/failure-log.yaml#/FailureLog'
+    FailurePatternAnalysis:
+      $ref: './schemas/failure-log.yaml#/FailurePatternAnalysis'
+
+    # ============================================
+    # Phase 4 Entities (ChatGPT Deep Research Recommendations)
+    # ============================================
+    OdysseyPlan:
+      $ref: './schemas/odyssey-plan.yaml#/OdysseyPlan'
+    OdysseyPath:
+      $ref: './schemas/odyssey-plan.yaml#/OdysseyPath'
+    Compass:
+      $ref: './schemas/odyssey-plan.yaml#/Compass'
+
+    # Enhanced types from common.yaml
+    DimensionDetail:
+      $ref: './schemas/common.yaml#/DimensionDetail'
+    HealthDimensionDetail:
+      $ref: './schemas/common.yaml#/HealthDimensionDetail'
+
+  # ============================================
+  # Framework Rules (behavioral constraints)
+  # ============================================
+  # These are not OpenAPI-native but are included as x- extensions
+  # for implementations that want to enforce DYL methodology
+  x-dyl-rules:
+    campaign-lifecycle:
+      $ref: './rules/campaign-lifecycle.yaml'
+    hypothesis-rules:
+      $ref: './rules/hypothesis-rules.yaml'
+    prototype-rules:
+      $ref: './rules/prototype-rules.yaml'
+    anti-patterns:
+      $ref: './rules/anti-patterns.yaml'
+    balance-rules:
+      $ref: './rules/balance-rules.yaml'
+    energy-rules:
+      $ref: './rules/energy-rules.yaml'
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/common.yaml#/Error'
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/common.yaml#/ValidationError'

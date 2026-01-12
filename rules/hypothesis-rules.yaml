@@ -1,0 +1,178 @@
+# Hypothesis Rules
+# Behavioral constraints for hypothesis quality and lifecycle
+
+name: hypothesis-rules
+version: 1.0.0
+description: |
+  Rules ensuring hypotheses are testable, well-formed, and progressing.
+  Hypotheses are the core unit of learning in DYL methodology.
+
+# ============================================
+# Quality Rules
+# ============================================
+
+quality_rules:
+  statement_quality:
+    field: statement
+    rules:
+      - must_be_belief:
+          description: "Hypothesis should express a testable belief"
+          valid_patterns:
+            - "I would"
+            - "I could"
+            - "I believe"
+            - "might be"
+            - "would give me"
+            - "would help me"
+            - "would make me"
+          invalid_patterns:
+            - "I want to"  # This is a goal, not hypothesis
+            - "I need to"  # This is a requirement, not hypothesis
+            - "I should"   # This is a prescription, not hypothesis
+            - "I will"     # This is a commitment, not hypothesis
+          message: "Hypothesis should be a belief to test, not a goal or commitment"
+
+      - must_be_falsifiable:
+          description: "Must be possible to gather evidence against it"
+          invalid_patterns:
+            - "I like"      # Already known, not a hypothesis
+            - "I am"        # Identity statement, not testable
+            - "I prefer"    # Already known preference
+          message: "Hypothesis must be something you don't already know"
+
+      - specificity:
+          min_length: 20
+          max_length: 300
+          message: "Hypothesis should be specific but concise"
+
+  refinement_chain:
+    description: Track hypothesis evolution
+    rules:
+      - when_refined:
+          condition: parent_hypothesis_id IS NOT NULL
+          requires:
+            - refinement_reason: true
+          message: "Document why the original hypothesis was refined"
+
+      - refinement_quality:
+          condition: parent_hypothesis_id IS NOT NULL
+          validation: |
+            new_statement should be more specific OR
+            address a gap identified in parent evidence
+          message: "Refinement should narrow focus based on learning"
+
+# ============================================
+# Lifecycle Rules
+# ============================================
+
+lifecycle_rules:
+  untested_timeout:
+    description: Hypotheses shouldn't stay untested indefinitely
+    condition: status == 'untested' AND age_days > 14
+    severity: warning
+    action: alert
+    message: "Hypothesis untested for 14 days. Consider creating a prototype or deprioritizing."
+
+  testing_requires_prototypes:
+    description: Status can only be 'testing' if prototypes exist
+    condition: status == 'testing'
+    requires:
+      - prototype_count: ">= 1"
+      - prototype_status: ["planned", "in_progress"]
+    message: "Cannot be 'testing' without active prototypes"
+
+  validation_requires_evidence:
+    description: Cannot validate/invalidate without evidence
+    condition: status IN ['validated', 'invalidated']
+    requires:
+      - evidence_count: ">= 1"
+      - prototype_completed_count: ">= 1"
+    message: "Cannot change status to validated/invalidated without evidence"
+
+  confidence_alignment:
+    description: Confidence should align with evidence direction
+    rules:
+      - validated_confidence:
+          condition: status == 'validated'
+          requires:
+            confidence: ">= 0.7"
+          message: "Validated hypothesis should have high confidence"
+
+      - invalidated_confidence:
+          condition: status == 'invalidated'
+          requires:
+            confidence: "<= 0.3"
+          message: "Invalidated hypothesis should have low confidence"
+
+# ============================================
+# Evidence Integration
+# ============================================
+
+evidence_rules:
+  confidence_update:
+    description: Confidence should update based on evidence
+    trigger: new_evidence_added
+    action: suggest_confidence_update
+    logic: |
+      If evidence.direction == 'supports':
+        suggest_confidence_increase(evidence.strength)
+      If evidence.direction == 'refutes':
+        suggest_confidence_decrease(evidence.strength)
+      If evidence.direction == 'transforms':
+        suggest_refinement()
+
+  sufficient_evidence:
+    description: Guidelines for when to change status
+    thresholds:
+      validate:
+        min_evidence: 3
+        min_supports_ratio: 0.7
+        min_strong_evidence: 1
+      invalidate:
+        min_evidence: 2
+        min_refutes_ratio: 0.6
+        min_strong_evidence: 1
+      needs_refinement:
+        condition: "high_variance_in_evidence OR transforms_count > 0"
+
+# ============================================
+# Priority Rules
+# ============================================
+
+priority_rules:
+  core_hypothesis_priority:
+    description: Core hypotheses should be tested first
+    condition: category == 'core' AND status == 'untested'
+    action: boost_priority
+    message: "Core hypotheses should be prioritized for testing"
+
+  assumption_challenge:
+    description: Assumed hypotheses should be actively challenged
+    condition: category == 'assumption' AND status == 'untested'
+    action: prompt
+    message: "This assumption should be challenged early - create a prototype to test it"
+
+  priority_decay:
+    description: Untested hypotheses lose priority over time
+    condition: status == 'untested' AND age_days > 21
+    action: decrease_priority
+    message: "Consider deprioritizing stale untested hypotheses"
+
+# ============================================
+# Metrics
+# ============================================
+
+metrics:
+  hypothesis_health:
+    indicators:
+      - has_clear_statement: true
+      - has_rationale: true
+      - prototype_count: ">= 0"
+      - age_appropriate_status: true  # untested → testing within 14 days
+
+  campaign_hypothesis_balance:
+    description: Healthy distribution of hypothesis categories
+    guidelines:
+      - core_count: "1-3 per campaign"
+      - supporting_ratio: "can exceed core"
+      - assumption_count: "should be challenged early"

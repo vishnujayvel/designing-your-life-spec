@@ -1,0 +1,348 @@
+# Hypothesis Schema
+# A belief or assumption to be tested through prototypes
+
+Hypothesis:
+  type: object
+  description: |
+    A Hypothesis represents a belief or assumption about what might work
+    in your life. Hypotheses are testable statements that can be validated
+    or invalidated through prototypes.
+
+    ## DYL Principles Applied
+
+    - **Prototyping**: Hypotheses exist to be tested, not debated
+    - **Reframing**: Bad hypotheses can be transformed, not just rejected
+    - **Failure Immunity**: Invalidated hypotheses are valuable learning
+    - **Bias to Action**: Untested hypotheses for >14 days trigger alerts
+
+    ## Good vs Bad Hypotheses
+
+    **Good** (testable, specific, action-oriented):
+    - "I would enjoy working at a startup more than a large company"
+    - "Remote work would improve my productivity and happiness"
+    - "I can build a sustainable consulting practice in 6 months"
+
+    **Bad** (vague, goal-oriented, untestable):
+    - "I want to be happy" (not testable)
+    - "Get a $300k job" (goal, not hypothesis)
+    - "Tech companies are better" (too vague)
+
+    ## Lifecycle
+
+    ```
+    untested → testing (1+ prototypes planned/in_progress)
+            → validated (evidence supports)
+            → invalidated (evidence refutes)
+            → refined (hypothesis modified based on learning)
+    ```
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    campaign_id:
+      $ref: './common.yaml#/EntityId'
+      description: Parent campaign this hypothesis belongs to
+
+    # ============================================
+    # Core Content
+    # ============================================
+    statement:
+      type: string
+      minLength: 20
+      maxLength: 300
+      description: |
+        The hypothesis statement. Must be a testable belief, not a goal
+        or wish. Should be specific enough to design experiments for.
+      example: "Working at a startup would give me more autonomy and learning opportunities than a large company"
+
+    rationale:
+      type: string
+      maxLength: 1000
+      description: |
+        Why you believe this might be true. What led to this hypothesis?
+        This helps with later reflection on biases and assumptions.
+      example: "In my current role, I feel constrained by process. Friends at startups describe more dynamic environments."
+
+    # ============================================
+    # Classification
+    # ============================================
+    category:
+      type: string
+      enum:
+        - core        # Central to the campaign question
+        - supporting  # Helps answer a core hypothesis
+        - exploratory # Tangential exploration
+        - assumption  # Underlying belief that should be challenged
+      description: |
+        How central this hypothesis is to the campaign.
+        Core hypotheses should get prototype priority.
+      example: "core"
+
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: |
+        Exploration priority (1 = highest).
+        High priority hypotheses should be tested first.
+      default: 3
+      example: 1
+
+    life_areas:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+      minItems: 1
+      maxItems: 4
+      description: Which life areas this hypothesis relates to
+      example: ["work", "health"]
+
+    # ============================================
+    # Status & Lifecycle
+    # ============================================
+    status:
+      $ref: './common.yaml#/HypothesisStatus'
+      default: "untested"
+
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1
+      description: |
+        Current confidence level (0-1) that this hypothesis is true.
+        Updated as evidence accumulates.
+        - 0.0-0.3: Likely false
+        - 0.3-0.5: Uncertain, leaning no
+        - 0.5-0.7: Uncertain, leaning yes
+        - 0.7-1.0: Likely true
+      default: 0.5
+      example: 0.65
+
+    # ============================================
+    # Refinement Tracking
+    # ============================================
+    parent_hypothesis_id:
+      $ref: './common.yaml#/EntityId'
+      description: |
+        If this hypothesis was refined from another, link to the original.
+        Enables tracking hypothesis evolution.
+
+    refinement_reason:
+      type: string
+      maxLength: 500
+      description: Why the parent hypothesis was refined into this one
+      example: "Original hypothesis too broad; focusing on remote specifically"
+
+    # ============================================
+    # Evidence Summary
+    # ============================================
+    evidence_summary:
+      type: object
+      description: Aggregated evidence assessment (computed)
+      readOnly: true
+      properties:
+        total_count:
+          type: integer
+          minimum: 0
+        supports_count:
+          type: integer
+          minimum: 0
+        refutes_count:
+          type: integer
+          minimum: 0
+        neutral_count:
+          type: integer
+          minimum: 0
+        strongest_for:
+          type: string
+          description: Summary of strongest supporting evidence
+        strongest_against:
+          type: string
+          description: Summary of strongest refuting evidence
+
+    # ============================================
+    # Timestamps
+    # ============================================
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+    first_prototype_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the first prototype was started
+
+    validated_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When status changed to validated/invalidated
+
+    # ============================================
+    # Relationships
+    # ============================================
+    prototype_ids:
+      type: array
+      items:
+        $ref: './common.yaml#/EntityId'
+      description: IDs of prototypes testing this hypothesis
+
+  required:
+    - id
+    - campaign_id
+    - statement
+    - status
+    - created_at
+    - updated_at
+
+# ============================================
+# Hypothesis Creation Request
+# ============================================
+
+HypothesisCreate:
+  type: object
+  description: Request body for creating a new hypothesis
+  properties:
+    statement:
+      type: string
+      minLength: 20
+      maxLength: 300
+    rationale:
+      type: string
+      maxLength: 1000
+    category:
+      type: string
+      enum: ["core", "supporting", "exploratory", "assumption"]
+      default: "exploratory"
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 5
+      default: 3
+    life_areas:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+      minItems: 1
+    parent_hypothesis_id:
+      $ref: './common.yaml#/EntityId'
+    refinement_reason:
+      type: string
+      maxLength: 500
+  required:
+    - statement
+
+# ============================================
+# Hypothesis Update Request
+# ============================================
+
+HypothesisUpdate:
+  type: object
+  description: Request body for updating a hypothesis
+  properties:
+    statement:
+      type: string
+      minLength: 20
+      maxLength: 300
+    rationale:
+      type: string
+      maxLength: 1000
+    category:
+      type: string
+      enum: ["core", "supporting", "exploratory", "assumption"]
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 5
+    life_areas:
+      type: array
+      items:
+        $ref: './common.yaml#/LifeArea'
+    status:
+      $ref: './common.yaml#/HypothesisStatus'
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1
+
+# ============================================
+# Hypothesis List Response
+# ============================================
+
+HypothesisList:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/Hypothesis'
+    total:
+      type: integer
+      minimum: 0
+    page:
+      type: integer
+      minimum: 1
+    page_size:
+      type: integer
+      minimum: 1
+      maximum: 100
+
+  # ============================================
+  # Hypothesis Examples
+  # ============================================
+  examples:
+    # Tech Industry Example (Hooli/Pied Piper)
+    tech_startup_hypothesis:
+      summary: "Tech - Startup vs BigCorp"
+      description: "Software engineer testing startup vs large company fit"
+      value:
+        id: "h-tech-001"
+        campaign_id: "c-job-search-2025"
+        statement: "Working at a startup like Pied Piper would give me more autonomy and learning opportunities than staying at Hooli"
+        rationale: "At Hooli, I feel constrained by layers of process and approval chains. Friends at smaller companies describe more dynamic environments where engineers own entire features."
+        category: core
+        priority: 1
+        life_areas: ["work"]
+        status: testing
+        confidence: 0.6
+
+    # Restaurant Industry Example (The Bear)
+    restaurant_technique_hypothesis:
+      summary: "Restaurant - Fine Dining Techniques (The Bear)"
+      description: "Chef testing whether fine dining skills translate to casual setting"
+      value:
+        id: "h-bear-001"
+        campaign_id: "c-transform-the-beef"
+        statement: "Fine dining techniques like mise en place and proper station organization would reduce chaos and improve food quality at The Beef"
+        rationale: "The kitchen is pure chaos - no systems, no communication, tickets everywhere. At ever, we ran like a machine. These techniques work at the highest level. They should work here too."
+        category: core
+        priority: 1
+        life_areas: ["work"]
+        status: testing
+        confidence: 0.7
+
+    tech_remote_hypothesis:
+      summary: "Tech - Remote Work"
+      description: "Testing remote work impact on productivity"
+      value:
+        id: "h-tech-002"
+        statement: "Remote-first work would improve my productivity and reduce burnout compared to hybrid or in-office requirements"
+        rationale: "I do my best deep work at home. Office days feel like performance art. But I might be undervaluing the serendipity of in-person collaboration."
+        category: core
+        priority: 2
+        life_areas: ["work", "health"]
+        status: untested
+        confidence: 0.5
+
+    restaurant_team_hypothesis:
+      summary: "Restaurant - Team Development (The Bear)"
+      description: "Chef testing whether staff can grow into new roles"
+      value:
+        id: "h-bear-002"
+        statement: "With proper training and trust, the existing Beef crew can operate at a higher level rather than needing to hire new staff"
+        rationale: "Richie's been here forever - he knows the neighborhood, the customers, the soul of this place. Sydney has the skills but needs a chance to lead. Marcus wants to grow. Maybe we don't need new people. Maybe we need to develop who's already here."
+        category: core
+        priority: 1
+        life_areas: ["work", "love"]
+        status: testing
+        confidence: 0.55

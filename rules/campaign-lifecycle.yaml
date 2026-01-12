@@ -1,0 +1,193 @@
+# Campaign Lifecycle Rules
+# Behavioral constraints for campaign state transitions
+
+name: campaign-lifecycle
+version: 1.0.0
+description: |
+  Rules governing how campaigns progress through their lifecycle.
+  These rules enforce the DYL principle that campaigns are exploratory
+  journeys, not goal-achievement checklists.
+
+# ============================================
+# State Transitions
+# ============================================
+
+states:
+  - active
+  - paused
+  - pivoted
+  - completed
+  - abandoned
+
+transitions:
+  # From: active
+  active_to_paused:
+    from: active
+    to: paused
+    conditions:
+      - reason_required: true
+        reason_min_length: 20
+    description: |
+      Temporary pause for life circumstances.
+      Must document why and expected return date.
+
+  active_to_pivoted:
+    from: active
+    to: pivoted
+    conditions:
+      - requires_evidence: true
+        min_evidence_count: 1
+      - reason_required: true
+    description: |
+      Major direction change based on learnings.
+      Must have at least one piece of evidence supporting the pivot.
+
+  active_to_completed:
+    from: active
+    to: completed
+    conditions:
+      - requires_decision: true
+        decision_type: ["commitment", "rejection"]
+      - requires_prototype: true
+        min_completed: 1
+    description: |
+      Campaign concludes with a clear decision.
+      Must have at least one completed prototype and formal decision.
+
+  active_to_abandoned:
+    from: active
+    to: abandoned
+    conditions:
+      - reason_required: true
+        reason_min_length: 50
+    warnings:
+      - severity: warning
+        message: "Consider 'paused' if you might return to this campaign"
+    description: |
+      Stopping without conclusion. Requires substantial documentation
+      to capture learnings for future reference.
+
+  # From: paused
+  paused_to_active:
+    from: paused
+    to: active
+    conditions: []
+    description: Resume the campaign after pause period.
+
+  paused_to_abandoned:
+    from: paused
+    to: abandoned
+    conditions:
+      - paused_duration_min_days: 30
+      - reason_required: true
+    description: |
+      Campaign paused too long; formally abandoning.
+      Only allowed after 30+ days paused.
+
+# ============================================
+# Time-Based Rules
+# ============================================
+
+time_rules:
+  hypothesis_required:
+    description: Campaign must have at least one hypothesis within 7 days
+    trigger_after_days: 7
+    condition: hypothesis_count == 0
+    action: alert
+    message: "Your campaign has no hypotheses. What beliefs are you testing?"
+
+  prototype_activity:
+    description: Active campaigns should have prototype activity
+    trigger_after_days: 14
+    condition: |
+      status == 'active' AND
+      (last_prototype_completed_at IS NULL OR
+       days_since(last_prototype_completed_at) > 14)
+    action: alert
+    message: "No prototype activity in 14 days. Are you stuck in analysis?"
+
+  stale_campaign:
+    description: Campaigns without activity should be reviewed
+    trigger_after_days: 30
+    condition: days_since(last_activity_at) > 30
+    action: prompt_review
+    message: "This campaign hasn't been worked on in 30 days. Should it be paused?"
+
+  long_running_campaign:
+    description: Very long campaigns may need re-evaluation
+    trigger_after_days: 180
+    condition: days_active > 180
+    action: prompt_review
+    message: "Campaign running for 6+ months. Is the question still relevant?"
+
+# ============================================
+# Content Rules
+# ============================================
+
+content_rules:
+  question_quality:
+    field: question
+    rules:
+      - must_be_question: true
+        description: "Question should end with '?' or be phrased as inquiry"
+      - min_length: 20
+      - max_length: 500
+      - not_goal_oriented:
+          forbidden_patterns:
+            - "^Get a job"
+            - "^Find a"
+            - "^Make \\$"
+            - "^Earn"
+            - "^Become a"
+          message: "Question should be exploratory, not goal-oriented"
+
+  balance_tracking:
+    description: Life balance should be tracked periodically
+    rules:
+      - initial_balance_required: true
+        within_days: 7
+        message: "Record initial life balance within first week"
+      - balance_update_frequency:
+          max_days_between: 30
+          message: "Update life balance assessment at least monthly"
+
+# ============================================
+# Relationship Rules
+# ============================================
+
+relationship_rules:
+  campaign_hypothesis_minimum:
+    description: Active campaigns should have testable hypotheses
+    condition: status == 'active' AND hypothesis_count == 0 AND age_days > 7
+    severity: warning
+    message: "Campaign needs at least one hypothesis to test"
+
+  orphan_detection:
+    description: Detect campaigns that never got traction
+    condition: |
+      status == 'abandoned' AND
+      hypothesis_count == 0 AND
+      prototype_count == 0
+    severity: info
+    message: "Campaign abandoned without any exploration - consider why"
+
+# ============================================
+# Metrics Thresholds
+# ============================================
+
+metrics:
+  healthy_campaign:
+    description: Indicators of a well-functioning campaign
+    indicators:
+      - hypothesis_count: ">= 1"
+      - active_prototype_or_recent: true
+      - days_since_session: "<= 14"
+      - life_balance_current: true
+
+  stuck_indicators:
+    description: Signs the campaign may be stuck
+    indicators:
+      - no_prototypes_planned: true
+      - all_hypotheses_untested: true
+      - no_evidence_captured: true
+      - days_since_activity: "> 14"

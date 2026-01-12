@@ -1,0 +1,421 @@
+# Balance Rules
+# Rules for maintaining life balance across Work, Play, Love, Health
+
+name: balance-rules
+version: 1.0.0
+description: |
+  Rules for tracking and maintaining balance across the four life areas
+  defined in Designing Your Life: Work, Play, Love, Health (WELH).
+  A well-designed life attends to all four areas.
+
+# ============================================
+# Life Areas Definition
+# ============================================
+
+life_areas:
+  work:
+    description: |
+      Professional activities, career, vocation.
+      What you do to contribute value and earn a living.
+    includes:
+      - "Job/career activities"
+      - "Side projects"
+      - "Skill building for work"
+      - "Networking"
+    does_not_include:
+      - "Hobbies that don't generate income"
+      - "Learning for fun"
+
+  play:
+    description: |
+      Fun, recreation, pure enjoyment.
+      Activities done for their own sake, not for outcomes.
+    includes:
+      - "Hobbies"
+      - "Games"
+      - "Creative pursuits (non-work)"
+      - "Entertainment"
+      - "Travel for fun"
+    key_test: "Would you do this even if no one knew?"
+
+  love:
+    description: |
+      Relationships and connection.
+      How you nurture bonds with others.
+    includes:
+      - "Partner/spouse time"
+      - "Family relationships"
+      - "Friendships"
+      - "Community involvement"
+      - "Pets"
+    note: "Quality > quantity"
+
+  health:
+    description: |
+      Physical, mental, emotional, spiritual wellbeing.
+      How you take care of yourself.
+    includes:
+      - "Exercise"
+      - "Sleep"
+      - "Nutrition"
+      - "Mental health practices"
+      - "Therapy/counseling"
+      - "Spiritual practices"
+      - "Rest and recovery"
+
+# ============================================
+# Balance Assessment
+# ============================================
+
+assessment:
+  scale:
+    range: "0-10"
+    anchors:
+      0: "Completely neglected, crisis level"
+      3: "Inadequate, causing problems"
+      5: "Adequate, maintaining"
+      7: "Good, intentional investment"
+      10: "Thriving, fully engaged"
+
+  frequency:
+    recommended: "weekly"
+    minimum: "monthly"
+    trigger_reassess:
+      - "Major life event"
+      - "Campaign milestone"
+      - "Session check-in"
+      - "Significant mood change"
+
+  questions_per_area:
+    work:
+      - "How engaged do I feel with my work?"
+      - "Am I learning and growing?"
+      - "Does my work feel meaningful?"
+
+    play:
+      - "When did I last do something purely for fun?"
+      - "Do I have activities that make me lose track of time?"
+      - "Am I scheduling play or just hoping it happens?"
+
+    love:
+      - "How connected do I feel to the important people in my life?"
+      - "Am I investing in relationships?"
+      - "Do I feel supported and seen?"
+
+    health:
+      - "How is my physical energy?"
+      - "Am I sleeping well?"
+      - "How is my mental/emotional state?"
+      - "Am I practicing self-care?"
+
+# ============================================
+# Balance Rules
+# ============================================
+
+rules:
+  minimum_floor:
+    description: No area should fall below critical level
+    threshold: 3
+    severity: warning
+    message: |
+      {area} is at a critical level ({score}). Even during intense
+      campaigns, don't let any area fall below 3.
+
+  crisis_floor:
+    description: Extremely low scores require immediate attention
+    threshold: 2
+    severity: escalation
+    message: |
+      {area} is in crisis ({score}). This needs immediate attention
+      before continuing campaign activities.
+
+  balance_variance:
+    description: Areas shouldn't be too far apart
+    max_difference: 5
+    severity: coaching
+    message: |
+      High imbalance detected: {high_area} is at {high_score} while
+      {low_area} is at {low_score}. Consider rebalancing.
+
+  declining_trend:
+    description: Watch for areas that are consistently declining
+    trigger: "3 consecutive decreases"
+    severity: warning
+    message: |
+      {area} has been declining for 3+ assessments. What's causing
+      this and how can we address it?
+
+  campaign_impact:
+    description: Track campaign's effect on balance
+    rules:
+      - target_area_improving:
+          condition: "area in campaign.target_areas"
+          expected: "stable or improving"
+          warning: "Campaign target area is declining"
+
+      - non_target_stable:
+          condition: "area not in campaign.target_areas"
+          expected: "decline < 2 points"
+          warning: "Campaign is causing neglect of {area}"
+
+# ============================================
+# Capacity Constraints (Overcommitment Prevention)
+# ============================================
+
+capacity_rules:
+  description: |
+    Life balance is constrained by finite time and energy.
+    These rules prevent accidental overcommitment by enforcing
+    soft capacity limits and requiring intentional tradeoff decisions.
+
+  soft_capacity_budget:
+    description: Total engagement across all areas has practical limits
+    threshold: 28  # out of 40 possible (average 7 per area)
+    severity: coaching
+    condition: "sum(work, play, love, health) > 28"
+    requires:
+      tradeoff_note: true
+    message: |
+      Your total life balance score is {total}/40, which exceeds the
+      typical sustainable capacity of 28. This is possible but rare.
+
+      Please reflect:
+      - Is this assessment accurate, or aspirational?
+      - What tradeoffs are you making to sustain this?
+      - Is this sustainable, or a temporary burst?
+
+      Document your response in tradeoff_note.
+
+  all_areas_high:
+    description: All areas at 8+ is a red flag for unrealistic assessment
+    condition: "all(work >= 8, play >= 8, love >= 8, health >= 8)"
+    severity: coaching
+    message: |
+      All four areas are rated 8 or higher. While this is wonderful
+      if accurate, it's statistically rare. Consider:
+
+      - Are you being honest with yourself?
+      - What would someone close to you say about each area?
+      - When did you last feel stressed or depleted?
+
+      This isn't to discourage you - just ensure the assessment
+      reflects reality so the framework can help you.
+
+  significant_increase:
+    description: Large jumps in one area often mean decreases elsewhere
+    condition: "area_change >= 3"
+    severity: prompt
+    requires:
+      tradeoff_note: true
+    message: |
+      {area} increased by {change} points. That's great progress!
+
+      However, this level of improvement typically requires
+      reallocating time/energy from somewhere. Which area(s)
+      are you drawing from?
+
+      Options:
+      a) I reduced investment in: {other_area}
+      b) I found new time (reduced waste, better efficiency)
+      c) This is a temporary burst, will rebalance by: {date}
+      d) The previous score was inaccurate
+
+  temporary_burst_tracking:
+    description: Intensive periods must have a rebalancing plan
+    condition: "is_temporary_burst == true"
+    requires:
+      rebalance_plan: true
+      burst_duration: "max 12 weeks"
+    message: |
+      You've marked this as a temporary burst period.
+      Document when and how you'll rebalance.
+
+      Bursts longer than 12 weeks are no longer temporary -
+      they're your new normal. Be intentional about that choice.
+
+  burst_duration_exceeded:
+    description: Bursts that exceed their planned duration
+    condition: |
+      is_temporary_burst == true AND
+      burst_start_date + planned_duration < today
+    severity: escalation
+    message: |
+      Your "temporary" burst in {area} has exceeded its planned
+      duration. This often leads to burnout or neglect.
+
+      Options:
+      1. Extend with new rebalance plan (max 4 more weeks)
+      2. Accept this as new baseline and adjust expectations
+      3. Actively rebalance now
+
+# ============================================
+# Tradeoff Documentation
+# ============================================
+
+tradeoff_rules:
+  description: |
+    Forcing explicit tradeoff documentation prevents the common
+    failure mode of optimistic planning that ignores constraints.
+
+  required_when:
+    - "total > 28"
+    - "any single area change >= 3"
+    - "is_temporary_burst == true"
+    - "campaign spans multiple life areas with high targets"
+
+  tradeoff_format:
+    structure: |
+      - from_area: The area being deprioritized
+      - to_area: The area receiving increased investment
+      - rationale: Why this tradeoff makes sense now
+      - duration: How long this tradeoff will be maintained
+      - rebalance_trigger: What will signal time to rebalance
+
+    example:
+      from_area: play
+      to_area: work
+      rationale: "Job search sprint - finding the right role is priority"
+      duration: "8 weeks"
+      rebalance_trigger: "Accepted offer or 8 weeks elapsed"
+
+  healthy_tradeoff_patterns:
+    - name: "Seasonal Balance"
+      description: "Different areas dominate at different times"
+      example: "High work during job search, high play after landing"
+      healthy: true
+
+    - name: "Recovery Period"
+      description: "Health dominates during recovery from illness/burnout"
+      example: "Health 9, others reduced to 4-5"
+      healthy: true
+
+    - name: "Life Event Focus"
+      description: "Love dominates during family events"
+      example: "New baby, wedding, caring for parent"
+      healthy: true
+
+  unhealthy_tradeoff_patterns:
+    - name: "Permanent Sacrifice"
+      description: "One area chronically at 2-3 for months"
+      warning: "This isn't a tradeoff, it's neglect"
+      intervention: "Discuss in session, may need campaign focus"
+
+    - name: "Martyr Pattern"
+      description: "Health always the one being sacrificed"
+      warning: "Unsustainable - health issues will force rebalancing"
+      intervention: "Health floor of 4 during any burst period"
+
+    - name: "Work Dominance"
+      description: "Work always at 8+, others always below 5"
+      warning: "Workaholism is not a life design strategy"
+      intervention: "Explore relationship with work in session"
+
+# ============================================
+# Prototype Balance
+# ============================================
+
+prototype_balance:
+  description: Ensure prototypes span life areas
+
+  rules:
+    - work_not_dominant:
+        condition: |
+          prototype_life_area_distribution.work > 0.8 AND
+          campaign.target_areas != ['work']
+        message: "80%+ of prototypes are work-focused"
+        suggestion: "Consider prototypes for other life areas"
+
+    - all_areas_considered:
+        condition: |
+          campaign.age_days > 30 AND
+          any_area_has_zero_prototypes
+        message: "{area} has no prototypes after 30 days"
+        suggestion: "Even if not the focus, consider how campaign affects {area}"
+
+# ============================================
+# Integration with Energy
+# ============================================
+
+energy_integration:
+  description: Connect balance to energy tracking
+
+  rules:
+    - low_balance_low_energy:
+        condition: |
+          life_balance.{area} < 4 AND
+          energy_logs.{area}.average < 0
+        insight: |
+          {area} is both low balance AND draining.
+          This area may need structural change, not just more time.
+
+    - high_balance_high_energy:
+        condition: |
+          life_balance.{area} > 7 AND
+          energy_logs.{area}.average > 3
+        insight: |
+          {area} is both high balance AND energizing.
+          This is working well - protect this investment.
+
+    - time_vs_energy_mismatch:
+        condition: |
+          energy_logs.{area}.count is high AND
+          life_balance.{area} is low
+        insight: |
+          Lots of time spent on {area} but low balance score.
+          Quality issue? Wrong activities within this area?
+
+# ============================================
+# Rebalancing Interventions
+# ============================================
+
+interventions:
+  quick_wins:
+    description: Fast interventions when an area needs attention
+    suggestions:
+      work:
+        - "Take a genuine lunch break"
+        - "Learn something new for 30 min"
+        - "Have a meaningful conversation with a colleague"
+
+      play:
+        - "Schedule 30 min of pure fun this week"
+        - "Revisit an old hobby"
+        - "Say yes to something spontaneous"
+
+      love:
+        - "Text someone you miss"
+        - "Schedule a date night"
+        - "Call a friend instead of texting"
+
+      health:
+        - "Go to bed 30 min earlier"
+        - "Take a walk outside"
+        - "Drink more water today"
+
+  structural_changes:
+    description: When quick wins aren't enough
+    threshold: "balance < 4 for 4+ weeks"
+    suggestions:
+      - "This may need a prototype or hypothesis of its own"
+      - "Consider if campaign scope is too narrow"
+      - "Discuss in coaching session"
+
+# ============================================
+# Metrics
+# ============================================
+
+metrics:
+  overall_balance:
+    calculation: "average of all four areas"
+    healthy_range: "5-8"
+    warning_below: 5
+    warning_above: 9  # May indicate avoidance of honest assessment
+
+  balance_stability:
+    calculation: "standard deviation of scores over time"
+    healthy: "< 2 points variation"
+    concerning: "> 3 points wild swings"
+
+  lowest_area:
+    description: "Track which area is consistently lowest"
+    insight: "Patterns reveal systemic issues"

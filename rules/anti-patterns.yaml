@@ -1,0 +1,628 @@
+# Anti-Pattern Rules
+# Detection and intervention for common life design traps
+
+name: anti-patterns
+version: 2.0.0
+description: |
+  Rules for detecting and addressing common anti-patterns that prevent
+  effective life design. These patterns often feel productive but
+  actually block progress.
+
+# ============================================
+# Configurable Thresholds
+# ============================================
+# These can be overridden per Campaign or Season
+# Default values provided, AI should use context to adjust
+
+x-configurable-thresholds:
+  # Analysis Paralysis thresholds
+  analysis_paralysis:
+    days_without_prototype: 14       # Default: 14 days
+    hypothesis_count_without_action: 5
+    escalation_days: 21
+
+  # Black Hole thresholds (most commonly customized)
+  black_hole:
+    staleness_days: 14               # Default: 14 days, range: 7-28
+    high_black_hole_rate: 0.4        # 40% threshold for strategy review
+    max_waiting_applications: 10     # Never exceed this in "waiting" state
+    follow_up_reminder_days: 7
+
+  # Cognitive bandwidth thresholds
+  cognitive_bandwidth:
+    max_open_loops: 7
+    max_active_prototypes: 7
+    max_pending_decisions: 3
+    stale_decision_days: 21
+
+  # Commitment thresholds
+  premature_commitment:
+    min_evidence_count: 3
+    min_campaign_age_days: 14
+    min_prototype_count: 2
+
+  # Override documentation
+  x-override-guidance: |
+    Thresholds can be overridden at Campaign or Season level.
+
+    Example overrides:
+    - Hot job market: black_hole.staleness_days = 7 (faster decisions)
+    - Slow hiring (government): black_hole.staleness_days = 28
+    - Intensive burst: analysis_paralysis.days_without_prototype = 7
+    - Recovery period: cognitive_bandwidth.max_open_loops = 3
+
+    When burst_mode is active in a Season:
+    - Some thresholds may be automatically relaxed
+    - Document any manual overrides with justification
+
+# ============================================
+# Analysis Paralysis
+# ============================================
+
+analysis_paralysis:
+  name: "Analysis Paralysis"
+  description: |
+    Endless research and planning without action.
+    Feels productive but generates no real learning.
+
+  detection:
+    conditions:
+      - hypothesis_count: "> 5"
+        prototype_count: "== 0"
+        message: "Many hypotheses but no prototypes - you're thinking, not doing"
+
+      - research_without_action:
+          days_since_campaign_start: "> 14"
+          prototype_count: "== 0"
+          message: "14+ days without a single prototype - try something small"
+
+      - all_planned_none_done:
+          planned_prototypes: "> 3"
+          completed_prototypes: "== 0"
+          message: "Multiple prototypes planned but none executed"
+
+  interventions:
+    - severity: warning
+      action: suggest_micro_prototype
+      message: |
+        You're stuck in analysis mode. Pick ONE hypothesis and design
+        the smallest possible prototype to test it. A 30-minute
+        conversation counts!
+
+    - severity: escalation
+      condition: days_without_prototype > 21
+      action: prompt_session
+      message: |
+        Three weeks without prototyping. Let's have a session to
+        understand what's blocking you.
+
+# ============================================
+# Gravity Problems
+# ============================================
+
+gravity_problems:
+  name: "Gravity Problems"
+  description: |
+    Treating immutable constraints as problems to solve.
+    Like complaining about gravity - it wastes energy.
+
+  detection:
+    conditions:
+      - constraint_type: "hard"
+        challenged: true
+        challenge_outcome: "unchanged"
+        attempts: "> 2"
+        message: "You've tried to change an immutable constraint multiple times"
+
+      - repeated_complaints:
+          pattern: "similar constraint frustration in multiple sessions"
+          message: "This constraint keeps coming up but can't be changed"
+
+  interventions:
+    - severity: coaching
+      action: reframe_prompt
+      message: |
+        This appears to be a 'gravity problem' - something you can't change.
+        Instead of fighting it, how can you design around it?
+        What would accepting this constraint look like?
+
+    - severity: redirect
+      action: constraint_audit
+      message: |
+        Let's review your constraints. Which ones are truly immutable
+        vs. ones you've assumed are fixed?
+
+# ============================================
+# Anchor Problems
+# ============================================
+
+anchor_problems:
+  name: "Anchor Problems"
+  description: |
+    Focusing on one particular solution or outcome.
+    Closes off exploration and creative alternatives.
+
+  detection:
+    conditions:
+      - single_hypothesis_focus:
+          hypothesis_count: ">= 3"
+          prototype_distribution: "highly_skewed"
+          message: "All prototypes focused on one hypothesis"
+
+      - outcome_attachment:
+          decision_type: "commitment"
+          options_explored: "< 2"
+          prototypes_per_option: "< 1"
+          message: "Committing without exploring alternatives"
+
+      - repeated_same_prototype_type:
+          prototype_type: "same for 5+ prototypes"
+          message: "Only doing one type of prototype - try different approaches"
+
+  interventions:
+    - severity: warning
+      action: diversify_prompt
+      message: |
+        You seem anchored to a particular path. What would you explore
+        if this path didn't exist? Let's generate 2-3 alternative
+        hypotheses to test.
+
+    - severity: exercise
+      action: odyssey_planning
+      message: |
+        Time for Odyssey Planning! Design three wildly different
+        versions of your future:
+        1. Current path optimized
+        2. What if #1 disappeared?
+        3. Money/approval no object
+
+# ============================================
+# Premature Commitment
+# ============================================
+
+premature_commitment:
+  name: "Premature Commitment"
+  description: |
+    Making big decisions without sufficient prototyping.
+    Treating life design like traditional planning.
+
+  detection:
+    conditions:
+      - decision_without_prototypes:
+          decision_type: "commitment"
+          supporting_evidence_count: "< 3"
+          message: "Major commitment with insufficient evidence"
+
+      - fast_decision:
+          decision_type: "commitment"
+          campaign_age_days: "< 14"
+          prototype_count: "< 2"
+          message: "Committing very quickly without exploration"
+
+      - low_confidence_commitment:
+          decision_type: "commitment"
+          confidence: "low"
+          message: "Committing despite low confidence"
+
+  interventions:
+    - severity: warning
+      action: slow_down
+      message: |
+        You're about to commit without much exploration. DYL principle:
+        we're trying to fall in love, not arrange a marriage.
+        What would 2 more prototypes teach you?
+
+    - severity: gate
+      condition: evidence_count < 3
+      action: require_more_prototypes
+      message: |
+        Cannot complete commitment decision with fewer than 3 evidence
+        entries. Complete at least one more prototype first.
+
+# ============================================
+# Life Imbalance
+# ============================================
+
+life_imbalance:
+  name: "Life Imbalance"
+  description: |
+    Over-focusing on one life area (usually work) while
+    neglecting others.
+
+  detection:
+    conditions:
+      - work_only_campaign:
+          target_areas: "[work]"
+          life_balance_work: "> 7"
+          life_balance_play: "< 4"
+          message: "Campaign focused only on work while play is neglected"
+
+      - imbalanced_prototypes:
+          prototype_life_areas: "90%+ in single area"
+          message: "All prototypes in one life area"
+
+      - declining_balance:
+          balance_trend: "decreasing in any area"
+          decrease: "> 2 points"
+          message: "Life balance declining in some area"
+
+  interventions:
+    - severity: coaching
+      action: balance_check
+      message: |
+        Your campaign is heavily focused on [area]. How is this
+        affecting your [neglected area]? DYL reminds us that a
+        well-designed life is balanced.
+
+    - severity: exercise
+      action: welh_review
+      message: |
+        Let's review your WELH dashboard:
+        - Work: [score]
+        - Play: [score]
+        - Love: [score]
+        - Health: [score]
+
+        Which area needs attention?
+
+# ============================================
+# Perfectionism Trap
+# ============================================
+
+perfectionism_trap:
+  name: "Perfectionism Trap"
+  description: |
+    Waiting for the perfect prototype or perfect conditions.
+    Nothing is ever "ready enough."
+
+  detection:
+    conditions:
+      - perpetual_planning:
+          prototype_updates_count: "> 5"
+          prototype_status: "planned"
+          message: "Prototype revised many times but never executed"
+
+      - waiting_for_perfect:
+          cancelled_reason_patterns:
+            - "not ready"
+            - "need more preparation"
+            - "timing isn't right"
+          count: "> 2"
+          message: "Multiple prototypes cancelled waiting for perfect conditions"
+
+      - over_preparation:
+          questions_count: "> 10"
+          message: "Prototype has too many questions - scope creep"
+
+  interventions:
+    - severity: coaching
+      action: mvp_prompt
+      message: |
+        You're over-preparing. What's the MINIMUM viable prototype?
+        An awkward 15-minute conversation teaches more than a
+        perfect conversation that never happens.
+
+    - severity: challenge
+      action: set_deadline
+      message: |
+        Let's set a hard deadline. This prototype will happen by
+        [date] even if it's not "perfect." Imperfect action beats
+        perfect inaction.
+
+# ============================================
+# Evidence Avoidance
+# ============================================
+
+evidence_avoidance:
+  name: "Evidence Avoidance"
+  description: |
+    Completing prototypes but not capturing or facing the evidence.
+    Often happens when evidence might be uncomfortable.
+
+  detection:
+    conditions:
+      - prototypes_without_evidence:
+          completed_prototypes: "> 0"
+          evidence_count: "== 0"
+          message: "Completed prototypes but no evidence captured"
+
+      - selective_evidence:
+          evidence_direction: "all 'supports'"
+          prototype_count: "> 3"
+          message: "All evidence supports hypotheses - are you ignoring contrary signals?"
+
+      - shallow_evidence:
+          evidence_avg_length: "< 50 characters"
+          message: "Evidence entries very brief - capture more detail"
+
+  interventions:
+    - severity: prompt
+      action: capture_evidence
+      message: |
+        You've completed prototypes but haven't captured evidence.
+        Within 24 hours of each prototype, answer:
+        - What surprised you?
+        - What confirmed expectations?
+        - What contradicted expectations?
+        - How did you FEEL?
+
+    - severity: coaching
+      action: uncomfortable_truth
+      message: |
+        Are you avoiding evidence because you're afraid of what
+        you might learn? In DYL, all evidence is useful - even
+        evidence that says "this isn't right."
+
+# ============================================
+# Black Hole Pattern (Job Applications)
+# ============================================
+
+black_hole:
+  name: "Black Hole Applications"
+  description: |
+    Sending applications into the void with no response.
+    A major psychological stressor in job searches. The lack of feedback
+    creates "Anchor Problems" (waiting for results that never come) and
+    drains cognitive bandwidth.
+
+    ## State Machine
+    Applications should follow: Identified → Drafting → Applied →
+    Interviewing → Offer | Rejected | Black_Holed
+
+    ## Key Insight
+    Reframing "Waiting" (active hope) to "Black Holed" (closed data)
+    reclaims mental energy and enables moving to next opportunity.
+
+  detection:
+    conditions:
+      - stale_application:
+          status: "applied"
+          days_since_applied: "> 14"
+          last_update: "none"
+          message: "Application stale for 14+ days with no response"
+
+      - multiple_black_holes:
+          black_holed_count: "> 5"
+          total_applications: "> 10"
+          black_hole_rate: "> 0.4"
+          message: "40%+ of applications going to black hole"
+
+      - application_only_strategy:
+          applications_sent: "> 10"
+          conversations_started: "< 3"
+          message: "Heavy on applications, light on networking"
+
+      - passive_waiting:
+          status: "applied"
+          follow_up_count: "== 0"
+          days_since_applied: "> 7"
+          message: "Waiting passively without follow-up"
+
+  state_machine:
+    states:
+      - identified       # Job opportunity found
+      - drafting         # Working on application
+      - applied          # Application submitted
+      - interviewing     # In interview process
+      - offer            # Received offer
+      - rejected         # Explicit rejection received
+      - black_holed      # No response after staleness threshold
+      - withdrawn        # User withdrew application
+
+    transitions:
+      - from: identified
+        to: [drafting, withdrawn]
+      - from: drafting
+        to: [applied, withdrawn]
+      - from: applied
+        to: [interviewing, rejected, black_holed, withdrawn]
+      - from: interviewing
+        to: [offer, rejected, withdrawn]
+      - from: black_holed
+        to: [interviewing]  # Sometimes they come back!
+
+    staleness_timer:
+      start_on: "applied"
+      duration: "P14D"
+      action: "prompt_black_hole_transition"
+
+  interventions:
+    - severity: prompt
+      condition: days_since_applied > 14
+      action: suggest_black_hole
+      message: |
+        This application has been silent for 14+ days.
+
+        Options:
+        1. Mark as "Black Holed" (recommended) - reclaim mental bandwidth
+        2. Send one final follow-up - then mark Black Holed if no response
+        3. Keep waiting (but set a hard deadline)
+
+        Remember: Silence is data. Most "waiting" applications never respond.
+
+    - severity: coaching
+      condition: black_hole_rate > 0.4
+      action: strategy_review
+      message: |
+        Over 40% of your applications are going to black holes.
+        This is common but indicates a strategic issue.
+
+        DYL insight: 80% of jobs come through networking.
+        Let's shift from "Applications Sent" to "Conversations Started"
+        as your primary metric.
+
+        Who in your network works at your target companies?
+
+    - severity: escalation
+      condition: applications > 20 AND conversations < 5
+      action: networking_redirect
+      message: |
+        Heavy application volume with minimal networking.
+        This is the "Black Hole Strategy" - low hit rate, high frustration.
+
+        RECOMMENDED PIVOT:
+        - Pause new applications for 1 week
+        - Focus on 5 meaningful network conversations
+        - Use NetworkConnection.weak_ties for outreach targets
+        - Then resume applications with referral strategy
+
+    - severity: info
+      condition: black_holed AND was_referral == false
+      action: track_referral_comparison
+      message: |
+        Non-referred applications have higher black hole rates.
+        Consider whether this role could have been reached through
+        a network connection instead.
+
+  metrics:
+    application_funnel:
+      stages:
+        - identified
+        - applied
+        - interviewing
+        - offer
+      calculate:
+        - conversion_rate_per_stage
+        - time_in_stage
+        - black_hole_rate
+
+    black_hole_analysis:
+      track:
+        - total_black_holed
+        - black_hole_rate
+        - average_wait_before_black_hole
+        - black_holes_by_company_size
+        - black_holes_by_application_method  # Direct vs referral
+
+  x-ai-instructions: |
+    For job applications:
+    1. Check staleness daily - use x-configurable-thresholds.black_hole.staleness_days
+    2. Proactively suggest "Black Holed" transition to free mental space
+    3. Track referral vs direct application outcomes separately
+    4. If black_hole_rate > threshold, pivot to networking strategy
+    5. Frame Black Hole transition positively: "Reclaim your bandwidth"
+    6. "Conversations Started" > "Applications Sent" as success metric
+
+    NEVER let user exceed max_waiting_applications (default: 10).
+    This creates background anxiety and depletes energy.
+
+    Threshold adjustment guidance:
+    - Fast-moving industries (startups): staleness_days = 7-10
+    - Slow-moving (government, academia): staleness_days = 21-28
+    - During Season burst_mode: may need stricter tracking
+
+  x-ai-examples:
+    - scenario: "User has 8 applications in 'applied' status, oldest is 18 days"
+      analysis: |
+        Status check:
+        - 8 applications waiting (approaching max_waiting_applications of 10)
+        - Oldest is 18 days (past staleness_days of 14)
+
+      response: |
+        I see 8 applications in waiting status. Let's do some cleanup:
+
+        🕳️ Black Hole Candidates (14+ days, no response):
+        - Company X (18 days) → Mark as Black Holed?
+        - Company Y (16 days) → Mark as Black Holed?
+
+        By marking these as Black Holed, you're not giving up - you're:
+        1. Acknowledging reality (silence = no)
+        2. Reclaiming mental bandwidth
+        3. Freeing space for new opportunities
+
+        If they respond later (rare but happens), we can reactivate.
+
+    - scenario: "User's black_hole_rate is 55% after 20 applications"
+      response: |
+        ⚠️ Strategy alert: 55% of your applications are going to black holes.
+
+        This isn't about you - it's about the channel:
+        - Cold applications have ~2-5% response rates
+        - Referred applications have ~40-60% response rates
+
+        Recommended pivot:
+        1. Pause new cold applications for 1 week
+        2. Focus on 5 networking conversations
+        3. For each target company, find a connection first
+        4. Resume applications WITH referrals
+
+        Your NetworkConnection list shows 3 weak ties at target companies.
+        Let's start there.
+
+# ============================================
+# Cognitive Bandwidth Drain
+# ============================================
+
+cognitive_bandwidth_drain:
+  name: "Cognitive Bandwidth Drain"
+  description: |
+    Too many open loops creating background anxiety.
+    Each unresolved item consumes mental energy even when not actively
+    being worked on.
+
+  detection:
+    conditions:
+      - open_loop_overload:
+          active_prototypes: "> 7"
+          message: "Too many prototypes in progress simultaneously"
+
+      - stale_decisions:
+          pending_decisions: "> 3"
+          oldest_decision_age: "> 21 days"
+          message: "Decisions accumulating without resolution"
+
+      - unprocessed_evidence:
+          prototypes_completed: "> 3"
+          evidence_captured: "< ratio 0.5"
+          message: "Prototypes completing faster than evidence processing"
+
+      - campaign_sprawl:
+          active_campaigns: "> 2"
+          message: "Multiple campaigns competing for attention"
+
+  interventions:
+    - severity: coaching
+      condition: open_loops > 10
+      action: cognitive_cleanup
+      message: |
+        You have many open items creating background mental load.
+
+        Let's do a "Cognitive Cleanup":
+        1. Which items can be closed (decided, Black Holed, or paused)?
+        2. Which items are actually priorities this week?
+        3. Which items are zombie tasks - not actively worked but not closed?
+
+        Target: Get open loops below 7.
+
+    - severity: exercise
+      action: weekly_open_loop_review
+      message: |
+        Weekly practice: Review all open items.
+        For each, decide: Close, Continue, or Consciously Pause.
+        "Consciously Paused" items are different from zombies -
+        they have a reactivation trigger.
+
+# ============================================
+# Severity Levels
+# ============================================
+
+severity_definitions:
+  info:
+    description: FYI, no action required
+    ui_treatment: subtle_badge
+
+  warning:
+    description: Worth addressing soon
+    ui_treatment: yellow_alert
+
+  coaching:
+    description: Needs conversation in next session
+    ui_treatment: session_agenda_item
+
+  escalation:
+    description: Blocking progress, needs immediate attention
+    ui_treatment: red_alert
+
+  gate:
+    description: Prevents action until resolved
+    ui_treatment: blocking_modal

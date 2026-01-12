@@ -1,0 +1,553 @@
+# Constraint Schema
+# Boundaries that shape what's possible
+
+Constraint:
+  type: object
+  description: |
+    A Constraint represents a boundary that shapes what's possible in your
+    life design. Constraints can be hard (immutable) or soft (negotiable).
+
+    ## DYL Principles Applied
+
+    - **Reframing**: Many constraints are actually "assumed" and can be challenged
+    - **Wayfinding**: Constraints help narrow the solution space
+    - **Failure Immunity**: Discovering a constraint isn't failure
+
+    ## Constraint Types
+
+    | Type | Description | Can Change? | Example |
+    |------|-------------|-------------|---------|
+    | hard | Immutable reality | No | Visa restrictions |
+    | soft | Negotiable | Yes | Salary expectations |
+    | assumed | Belief to challenge | Yes | "I'm not qualified" |
+    | temporary | Time-bound | Eventually | Caring for parent |
+
+    ## Best Practices
+
+    - Regularly review "assumed" constraints - many can be reframed
+    - Distinguish between "can't" and "won't"
+    - Hard constraints should be verified, not assumed
+
+  properties:
+    id:
+      $ref: './common.yaml#/EntityId'
+
+    campaign_id:
+      $ref: './common.yaml#/EntityId'
+      description: Campaign this constraint belongs to
+
+    # ============================================
+    # Core Content
+    # ============================================
+    description:
+      type: string
+      minLength: 10
+      maxLength: 500
+      description: What the constraint is
+      example: "Must maintain $200k+ total compensation"
+
+    rationale:
+      type: string
+      maxLength: 1000
+      description: Why this constraint exists
+      example: "Current mortgage and family expenses require this income level"
+
+    type:
+      $ref: './common.yaml#/ConstraintType'
+
+    category:
+      $ref: './common.yaml#/ConstraintCategory'
+
+    # ============================================
+    # Assessment
+    # ============================================
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: |
+        How critical this constraint is (1 = most critical).
+        Helps prioritize when constraints conflict.
+      default: 3
+      example: 1
+
+    flexibility:
+      type: number
+      minimum: 0
+      maximum: 1
+      description: |
+        How flexible this constraint is (0 = rigid, 1 = very flexible).
+        Helps identify negotiation opportunities.
+      example: 0.3
+
+    verified:
+      type: boolean
+      default: false
+      description: |
+        Has this constraint been verified through prototyping or research?
+        Unverified constraints should be treated as assumptions.
+
+    verification_source:
+      type: string
+      maxLength: 500
+      description: How the constraint was verified
+      example: "Checked with immigration lawyer - visa requires employer sponsorship"
+
+    # ============================================
+    # Challenge Tracking
+    # ============================================
+    challenged:
+      type: boolean
+      default: false
+      description: Has this constraint been actively questioned?
+
+    challenge_outcome:
+      type: string
+      maxLength: 500
+      description: What happened when the constraint was challenged
+      example: "Discussed with partner - willing to consider lower income if quality of life improves"
+
+    reframed_to:
+      type: string
+      maxLength: 500
+      description: |
+        If the constraint was reframed, what's the new version?
+        Links to understanding how constraints evolved.
+      example: "Minimum $180k with better work-life balance is acceptable"
+
+    # ============================================
+    # Lifecycle
+    # ============================================
+    active:
+      type: boolean
+      default: true
+      description: Is this constraint currently active?
+
+    valid_until:
+      $ref: './common.yaml#/DateOnly'
+      description: |
+        For temporary constraints, when does this expire?
+        E.g., "Can't relocate until kid finishes school year"
+
+    deactivation_reason:
+      type: string
+      maxLength: 500
+      description: Why this constraint was deactivated
+
+    # ============================================
+    # Timestamps
+    # ============================================
+    created_at:
+      $ref: './common.yaml#/Timestamp'
+
+    updated_at:
+      $ref: './common.yaml#/Timestamp'
+
+    verified_at:
+      $ref: './common.yaml#/Timestamp'
+      description: When the constraint was verified
+
+  required:
+    - id
+    - campaign_id
+    - description
+    - type
+    - category
+    - created_at
+    - updated_at
+
+# ============================================
+# Constraint Creation Request
+# ============================================
+
+ConstraintCreate:
+  type: object
+  properties:
+    description:
+      type: string
+      minLength: 10
+      maxLength: 500
+    rationale:
+      type: string
+      maxLength: 1000
+    type:
+      $ref: './common.yaml#/ConstraintType'
+    category:
+      $ref: './common.yaml#/ConstraintCategory'
+    priority:
+      type: integer
+      minimum: 1
+      maximum: 5
+      default: 3
+    flexibility:
+      type: number
+      minimum: 0
+      maximum: 1
+    verified:
+      type: boolean
+      default: false
+    verification_source:
+      type: string
+      maxLength: 500
+    valid_until:
+      $ref: './common.yaml#/DateOnly'
+  required:
+    - description
+    - type
+    - category
+
+# ============================================
+# Constraint List Response
+# ============================================
+
+ConstraintList:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/Constraint'
+    total:
+      type: integer
+      minimum: 0
+
+# ============================================
+# Constraint Check Request/Response
+# Used for real-time constraint validation
+# ============================================
+
+ConstraintCheckRequest:
+  type: object
+  description: |
+    Request to check if an action would violate campaign constraints.
+    Used before scheduling interviews, prototypes, or other bounded activities.
+  properties:
+    campaign_id:
+      $ref: './common.yaml#/EntityId'
+      description: Campaign to check constraints for
+
+    action:
+      type: string
+      description: The action being attempted
+      enum:
+        - schedule_prototype
+        - add_task
+        - extend_campaign
+      example: "schedule_prototype"
+
+    date:
+      $ref: './common.yaml#/DateOnly'
+      description: Date of the proposed action
+
+    metadata:
+      type: object
+      description: Additional context for the check (varies by campaign type)
+      additionalProperties: true
+      example:
+        entity: "Austin, TX"
+        prototype_type: "site_visit"
+
+  required:
+    - campaign_id
+    - action
+    - date
+
+ConstraintCheckResponse:
+  type: object
+  description: |
+    Result of constraint check. Returns whether action is allowed
+    and provides context for coaching intervention if blocked.
+
+    ## Usage Pattern
+
+    ```
+    1. User requests action (e.g., schedule interview)
+    2. Hub calls mcp__dyl__check_constraints()
+    3. If allowed: false, Hub uses ai_guidance to explain
+    4. If allowed: true, proceed with action
+    ```
+
+  properties:
+    allowed:
+      type: boolean
+      description: Whether the action is permitted
+
+    constraint_id:
+      $ref: './common.yaml#/EntityId'
+      description: ID of the violated constraint (if any)
+
+    constraint_type:
+      type: string
+      description: Type of constraint checked
+      example: "max_prototypes_per_week"
+
+    current_value:
+      type: integer
+      description: Current count/value for the constraint
+      example: 2
+
+    limit_value:
+      type: integer
+      description: Maximum allowed value
+      example: 2
+
+    period:
+      type: string
+      enum: [day, week, month, campaign]
+      description: Time period the constraint applies to
+      example: "week"
+
+    warnings:
+      type: array
+      items:
+        type: string
+      description: Non-blocking warnings to surface
+      example:
+        - "You're at 2/2 prototypes this week"
+        - "Consider recovery time before adding more"
+
+    ai_guidance:
+      type: object
+      description: Coaching guidance for constraint handling (T12 Thick Response)
+      properties:
+        instruction:
+          type: string
+          description: How the coach should respond
+          example: "Constraint violation. Do not schedule. Explain recovery importance."
+        example_response:
+          type: string
+          description: Sample coaching language
+          example: |
+            You've hit your 2 prototypes/week limit.
+            This protects your recovery time and quality of engagement.
+            Reschedule to next week?
+        framework_ref:
+          type: string
+          description: Reference to coaching framework if applicable
+          example: "ref/seasonal_balance.md"
+
+    next_available:
+      type: object
+      description: When the action would be allowed
+      properties:
+        date:
+          $ref: './common.yaml#/DateOnly'
+        slots_available:
+          type: integer
+      example:
+        date: "2025-01-13"
+        slots_available: 2
+
+  required:
+    - allowed
+
+  x-ai-instructions: |
+    When a constraint check returns allowed: false:
+
+    1. DO NOT proceed with the action
+    2. Use the ai_guidance.example_response as a template
+    3. Explain WHY the constraint exists (recovery, quality, balance)
+    4. Offer alternatives (reschedule, adjust constraint)
+
+    When a constraint check returns warnings (but allowed: true):
+    1. Proceed with the action
+    2. Surface the warnings to the user
+    3. Ask if they want to reconsider
+
+  x-ai-examples:
+    - scenario: "Third prototype requested in a week with max 2"
+      response:
+        allowed: false
+        constraint_type: "max_prototypes_per_week"
+        current_value: 2
+        limit_value: 2
+        period: "week"
+        warnings: []
+        ai_guidance:
+          instruction: "Block the scheduling. Explain recovery importance."
+          example_response: |
+            You've hit your 2 prototypes/week limit.
+            This constraint protects your recovery time and quality of engagement.
+            Would you like to:
+            [1] Schedule for next week (Mon-Fri open)
+            [2] Adjust your constraint (not recommended)
+        next_available:
+          date: "2025-01-13"
+          slots_available: 2
+
+    - scenario: "Prototype during blackout period"
+      response:
+        allowed: false
+        constraint_type: "blackout_dates"
+        current_value: 1
+        limit_value: 0
+        warnings: []
+        ai_guidance:
+          instruction: "Block scheduling. This is a protected period."
+          example_response: |
+            Dec 24 - Jan 2 is your blackout period (holidays with family).
+            This time is protected for recovery and relationships.
+            The next available slot is January 3rd.
+
+# ============================================
+# Constraint Examples - Tech & Restaurant
+# ============================================
+
+ConstraintExamples:
+  type: object
+  description: Realistic constraint examples across tech and restaurant domains
+  examples:
+    # Tech Industry Examples
+    tech_hard_constraint:
+      summary: "Tech - Hard: Remote-First Required"
+      description: "Non-negotiable work arrangement constraint"
+      value:
+        id: "con-tech-001"
+        campaign_id: "c-job-search-2025"
+        description: "Must be remote-first or hybrid (max 2 days in office). No full RTO companies."
+        rationale: "Partner's career is anchored to current location. Productivity is higher working from home. Mental health requires flexibility."
+        type: hard
+        category: location
+        priority: 1
+        flexibility: 0.1
+        verified: true
+        verification_source: "Discussed with partner. This is a joint decision."
+        active: true
+
+    tech_soft_constraint:
+      summary: "Tech - Soft: Compensation Floor"
+      description: "Negotiable financial constraint"
+      value:
+        id: "con-tech-002"
+        campaign_id: "c-job-search-2025"
+        description: "Target $350k+ total compensation, minimum $280k"
+        rationale: "Current cost of living, mortgage, savings goals. But would consider lower for exceptional opportunity."
+        type: soft
+        category: financial
+        priority: 2
+        flexibility: 0.4
+        verified: false
+        challenged: true
+        challenge_outcome: "Realized I'd take $250k for a 4-day work week or truly exceptional culture"
+        reframed_to: "Compensation floor is $250k if work-life balance is exceptional"
+        active: true
+
+    tech_assumed_constraint:
+      summary: "Tech - Assumed: 'Must Be Staff Level'"
+      description: "Belief that was challenged through prototyping"
+      value:
+        id: "con-tech-003"
+        campaign_id: "c-job-search-2025"
+        description: "Must have Staff or Principal Engineer title"
+        rationale: "Career progression. Resume. Ego, honestly."
+        type: assumed
+        category: role
+        priority: 3
+        flexibility: 0.6
+        verified: false
+        challenged: true
+        challenge_outcome: "Coffee chat with Senior at Pied Piper revealed their Senior role has more scope than my current Staff role. Title isn't everything."
+        reframed_to: "Focus on scope and impact, not title. Senior at the right company > Staff at the wrong one."
+        active: true
+
+    tech_temporary_constraint:
+      summary: "Tech - Temporary: Interview Blackout"
+      description: "Time-bound constraint for recovery"
+      value:
+        id: "con-tech-004"
+        campaign_id: "c-job-search-2025"
+        description: "No interviews during December holidays (Dec 23 - Jan 2)"
+        rationale: "Protected time with partner. Mental health recovery. Companies aren't actively hiring anyway."
+        type: temporary
+        category: schedule
+        priority: 1
+        flexibility: 0.0
+        verified: true
+        verification_source: "Calendar blocked. Partner agreement."
+        valid_until: "2025-01-02"
+        active: true
+
+    # Restaurant Industry Examples (The Bear)
+    restaurant_hard_constraint:
+      summary: "The Bear - Hard: Keep the Italian Beef"
+      description: "Non-negotiable menu constraint honoring legacy"
+      value:
+        id: "con-bear-001"
+        campaign_id: "c-transform-the-beef"
+        description: "Italian beef stays on the menu. Forever. Non-negotiable."
+        rationale: "This is Mikey's legacy. The regulars depend on it. The neighborhood identity is built around it. You don't kill the thing that makes you who you are."
+        type: hard
+        category: values
+        priority: 1
+        flexibility: 0.0
+        verified: true
+        verification_source: "Talked to Table 4. Talked to Richie. This is not up for debate."
+        active: true
+
+    restaurant_soft_constraint:
+      summary: "The Bear - Soft: Food Cost Target"
+      description: "Financial constraint with some flexibility"
+      value:
+        id: "con-bear-002"
+        campaign_id: "c-transform-the-beef"
+        description: "Keep food cost under 32% for new menu items"
+        rationale: "We're already in debt. Elevated ingredients cost more. Need to balance quality with survival."
+        type: soft
+        category: financial
+        priority: 2
+        flexibility: 0.3
+        verified: true
+        verification_source: "Spreadsheet with Sugar. Tight but possible with careful sourcing."
+        challenged: true
+        challenge_outcome: "Rigatoni came in at 29% - we can hit this. But the tasting menu might push higher. Sugar is open to 35% for signature dishes if they drive revenue."
+        active: true
+
+    restaurant_assumed_constraint:
+      summary: "The Bear - Assumed: 'I Have to Do Everything Myself'"
+      description: "Belief that was challenged through evidence"
+      value:
+        id: "con-bear-003"
+        campaign_id: "c-transform-the-beef"
+        description: "I need to touch every plate. Quality requires my hands."
+        rationale: "At ever, the chef touched every plate. That's the standard. That's how you get stars."
+        type: assumed
+        category: role
+        priority: 3
+        flexibility: 0.7
+        verified: false
+        challenged: true
+        challenge_outcome: "Sydney expedited Friday service without me. Quality was consistent. She can do this. I need to let her."
+        reframed_to: "I need to BUILD SYSTEMS that ensure quality, not BE the system. Train, trust, verify."
+        active: false
+        deactivation_reason: "Reframed. Sydney owns expo. Marcus owns pastry. Tina owns prep. I own the vision."
+
+    restaurant_temporary_constraint:
+      summary: "The Bear - Temporary: No Major Changes During Opening Week"
+      description: "Time-bound operational constraint"
+      value:
+        id: "con-bear-004"
+        campaign_id: "c-transform-the-beef"
+        description: "Freeze menu and systems during opening week. No experiments, no changes, no new dishes."
+        rationale: "We need consistency during the most chaotic period. Reviews happen now. Word of mouth spreads now. Stability over innovation for 7 days."
+        type: temporary
+        category: schedule
+        priority: 1
+        flexibility: 0.0
+        valid_until: "2025-02-07"
+        active: true
+
+    restaurant_hard_financial:
+      summary: "The Bear - Hard: Mikey's Debt"
+      description: "Financial reality that cannot be ignored"
+      value:
+        id: "con-bear-005"
+        campaign_id: "c-transform-the-beef"
+        description: "Must service Mikey's $300k debt while operating"
+        rationale: "The debt is real. The loan sharks are real. We can't wish this away."
+        type: hard
+        category: financial
+        priority: 1
+        flexibility: 0.0
+        verified: true
+        verification_source: "Documents in the tomato cans. Sugar confirmed the numbers."
+        active: true

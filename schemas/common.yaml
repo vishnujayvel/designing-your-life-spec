@@ -1,0 +1,1656 @@
+# Common Types for DYL Framework
+# Shared enums, base types, and error responses
+
+# ============================================
+# Base Types
+# ============================================
+
+EntityId:
+  type: string
+  format: uuid
+  description: Unique identifier for any DYL entity
+  example: "550e8400-e29b-41d4-a716-446655440000"
+
+Timestamp:
+  type: string
+  format: date-time
+  description: ISO 8601 timestamp with timezone
+  example: "2025-01-15T10:30:00Z"
+
+DateOnly:
+  type: string
+  format: date
+  description: ISO 8601 date without time
+  example: "2025-01-15"
+
+Markdown:
+  type: string
+  description: |
+    Markdown-formatted text. Supports standard markdown syntax
+    including headers, lists, links, and code blocks.
+  example: |
+    ## Key Insight
+
+    The conversation revealed that **remote work** is non-negotiable.
+
+    - Flexibility matters more than salary
+    - Team culture is crucial
+
+# ============================================
+# Domain Hint (Optional)
+# ============================================
+
+CampaignDomain:
+  type: string
+  description: |
+    Optional domain hint for the campaign. This is purely organizational
+    and does not change framework behavior. All campaigns follow the same
+    DYL methodology regardless of domain.
+  enum:
+    - career           # Job search, career transitions
+    - location         # Geographic moves, lifestyle changes
+    - business         # Entrepreneurship, side projects
+    - relationships    # Personal relationships, community
+    - education        # Learning, skill development
+    - health           # Wellness, fitness goals
+    - creative         # Artistic pursuits, hobbies
+    - financial        # Money management, investments
+    - other            # Catch-all for unique campaigns
+  example: "career"
+
+# ============================================
+# Life Balance Areas (WELH)
+# ============================================
+
+LifeArea:
+  type: string
+  description: |
+    The four fundamental areas of life from DYL methodology (HWPL/WELH Dashboard).
+    Used for tracking balance and ensuring holistic life design.
+
+    These are NOT about time spent - they're about SATISFACTION and engagement.
+  oneOf:
+    - const: work
+      title: Work
+      description: |
+        Professional activities, career, vocation - anything that feels like "work."
+        Examples:
+        - Your day job and career development
+        - Side projects that feel like work (even if unpaid)
+        - Professional networking and skill building
+        - Job searching and interview preparation
+        Note: If a hobby becomes work-like, it might shift from Play to Work.
+    - const: play
+      title: Play
+      description: |
+        Fun, hobbies, recreation - activities done purely for joy, not productivity.
+        Examples:
+        - Hobbies with no productive purpose (gaming, hiking, art)
+        - Leisure reading (not professional development)
+        - Vacations and downtime
+        - Social activities just for fun
+        Key test: Would you do this even if no one paid you or praised you?
+    - const: love
+      title: Love
+      description: |
+        Relationships, family, community - connection with other humans.
+        Examples:
+        - Time with partner, family, close friends
+        - Community involvement and volunteering
+        - Mentoring and being mentored
+        - Deep conversations and emotional support
+        Note: Networking for career is Work, not Love (unless genuine friendship).
+    - const: health
+      title: Health
+      description: |
+        Physical, mental, emotional, and spiritual wellbeing.
+        Examples:
+        - Exercise, nutrition, sleep
+        - Therapy, meditation, mindfulness
+        - Medical care and preventive health
+        - Spiritual practices (if applicable)
+        Warning: Health is often first to be sacrificed. Don't let it drop below 4.
+  example: "work"
+
+# ============================================
+# Work Subcategories
+# ============================================
+
+WorkCategory:
+  type: string
+  description: |
+    Subcategory for Work life area. DYL defines Work as all productive
+    doing, including unpaid domestic labor. These subcategories enable
+    granular energy analysis within the Work domain.
+
+    ## Why Subcategories?
+
+    DYL's Work gauge encompasses:
+    - Career (paid professional work)
+    - Life Admin (bills, taxes, scheduling)
+    - Domestic (laundry, cleaning, cooking as chore)
+
+    Without subcategories, a user might have high "Work" volume but can't
+    distinguish career progress from being buried in chores.
+
+    ## Key Insight
+
+    Many people feel overwhelmed by "Work" but when analyzed:
+    - Career: 20 hrs/week (what they want)
+    - Admin: 10 hrs/week (necessary evil)
+    - Domestic: 15 hrs/week (draining)
+
+    This breakdown enables targeted interventions.
+
+    ## Note on Caregiving
+
+    Caregiving (childcare, eldercare, pet care) falls under **Love**, not Work.
+    The relationship is the core, not the task completion. Caring for a sick
+    child is about love, not "getting the task done."
+
+  oneOf:
+    - const: career
+      title: Career
+      description: |
+        Professional work, job, career development.
+        Examples:
+        - Day job tasks and meetings
+        - Job searching and interview preparation
+        - Professional development and learning
+        - Side projects with career intent
+        - Networking for professional reasons
+        Key indicator: Would appear on a resume or LinkedIn.
+    - const: admin
+      title: Life Admin
+      description: |
+        Administrative tasks of adult life.
+        Examples:
+        - Paying bills and managing finances
+        - Scheduling appointments
+        - Paperwork (taxes, insurance, forms)
+        - Email/correspondence management
+        - Research for purchases/decisions
+        Key insight: Often invisible but draining. Track to reclaim time.
+    - const: domestic
+      title: Domestic
+      description: |
+        Household maintenance and chores.
+        Examples:
+        - Laundry, cleaning, organizing
+        - Cooking (as chore, not joy)
+        - Grocery shopping, errands
+        - Home repairs and maintenance
+        - Decluttering and tidying
+        Note: If cooking brings joy, it might be Play, not Work.
+  example: "career"
+
+LifeBalance:
+  type: object
+  description: |
+    Current engagement levels across all four life areas (HWPL/WELH Dashboard).
+    Each area is rated 0-10 where:
+    - 0 = Completely neglected
+    - 5 = Adequate attention
+    - 10 = Thriving, fully engaged
+
+    ## Important Distinction
+
+    These scores measure SATISFACTION, not time spent or volume.
+    A user might work 80 hours (high volume) but rate Work at 3 (low satisfaction).
+
+    ## Capacity Constraint
+
+    Life balance is inherently constrained by finite time and energy.
+    The spec enforces this through:
+
+    1. **Soft Capacity Budget**: Total of all 4 areas should typically
+       not exceed 28 points (average of 7 per area). Totals above 28
+       trigger validation requiring explicit justification.
+
+    2. **Tradeoff Tracking**: When one area increases significantly,
+       the system prompts for which area is being deprioritized.
+
+    3. **Temporal Balance**: Short-term "bursts" in one area are
+       acceptable with a documented plan to rebalance.
+
+    ## Why Not Hard Limits?
+
+    A hard cap would prevent legitimate scenarios (e.g., vacation where
+    Play, Love, and Health are all genuinely high). Instead, we use
+    soft constraints with coaching prompts for self-reflection.
+
+  properties:
+    work:
+      type: integer
+      minimum: 0
+      maximum: 10
+      description: Work/career SATISFACTION level (not hours spent)
+    play:
+      type: integer
+      minimum: 0
+      maximum: 10
+      description: Play/recreation SATISFACTION level
+    love:
+      type: integer
+      minimum: 0
+      maximum: 10
+      description: Love/relationships SATISFACTION level
+    health:
+      type: integer
+      minimum: 0
+      maximum: 10
+      description: Health/wellbeing SATISFACTION level
+
+    # Enhanced semantic context (Gemini recommendation)
+    dimension_details:
+      type: object
+      description: |
+        Semantic context for each dimension's score.
+        Captures the "why" behind the number for AI insights.
+      properties:
+        work:
+          $ref: '#/DimensionDetail'
+        play:
+          $ref: '#/DimensionDetail'
+        love:
+          $ref: '#/DimensionDetail'
+        health:
+          $ref: '#/HealthDimensionDetail'
+
+    total:
+      type: integer
+      minimum: 0
+      maximum: 40
+      readOnly: true
+      description: |
+        Computed sum of all four areas. Used for capacity validation.
+        Typically should not exceed 28 without justification.
+    tradeoff_note:
+      type: string
+      maxLength: 500
+      description: |
+        Required when total > 28 or when any single area increases
+        by 3+ points. Documents intentional tradeoffs being made.
+    is_temporary_burst:
+      type: boolean
+      default: false
+      description: |
+        Set to true if current balance represents a temporary
+        intensive period (e.g., job search sprint, health recovery).
+        Requires rebalance_plan when true.
+    rebalance_plan:
+      type: string
+      maxLength: 500
+      description: |
+        Required when is_temporary_burst is true. Documents when
+        and how balance will be restored.
+    season_id:
+      type: string
+      format: uuid
+      description: |
+        Link to active Season if in burst mode.
+        Seasons provide context for intentional imbalance.
+    assessed_at:
+      type: string
+      format: date-time
+      description: When this assessment was made
+
+  required:
+    - work
+    - play
+    - love
+    - health
+  example:
+    work: 7
+    play: 4
+    love: 8
+    health: 6
+    total: 25
+    is_temporary_burst: false
+
+  x-ai-instructions: |
+    When assessing life balance:
+    1. Ask about SATISFACTION, not time spent
+    2. If all areas 8+, gently question: "Is this accurate or aspirational?"
+    3. If total > 28, require tradeoff documentation
+    4. Check for Volume vs Satisfaction mismatches
+    5. If in Season with burst_mode, adjust expectations accordingly
+    6. Watch for Martyr Pattern (health always sacrificed)
+
+    Weekly balance check procedure:
+    1. "On a scale of 0-10, how satisfied are you with [area] right now?"
+    2. For each score, ask: "What's driving that score?"
+    3. If any area is 3 or below: "What would it take to get this to a 5?"
+    4. If total > 28: "Something has to give - what are you trading off?"
+
+  x-ai-examples:
+    - scenario: "User rates Work=9, Play=8, Love=8, Health=8 (total=33)"
+      response: |
+        That's a total of 33/40 - unusually high! Let me check:
+        1. Are all four genuinely that satisfying right now?
+        2. Or is this aspirational/how you'd like things to be?
+        3. If accurate, what are you sacrificing to maintain this? (sleep? downtime?)
+
+    - scenario: "User rates Work=7, Play=2, Love=5, Health=4"
+      response: |
+        I notice Play is quite low at 2. What's happening there?
+        Health at 4 is also worth attention - often the first to slide during busy periods.
+        What would bring Play up to even a 4? Just one small thing for joy.
+
+# Dimension Detail (Enhanced HWPL with Sentiment)
+DimensionDetail:
+  type: object
+  description: |
+    Semantic context for a life dimension's score.
+    Captures the qualitative reasoning behind the quantitative score.
+  properties:
+    score:
+      type: integer
+      minimum: 0
+      maximum: 10
+      description: The satisfaction score (0-10)
+    sentiment:
+      type: string
+      maxLength: 200
+      description: |
+        Why this score? The qualitative reasoning.
+        This is crucial for AI to generate meaningful insights.
+      example: "Work feels meaningful but overwhelming. Love the impact, exhausted by pace."
+    time_allocation:
+      type: integer
+      minimum: 0
+      maximum: 100
+      description: |
+        Approximate percentage of waking time spent on this area.
+        Used to detect Volume vs Satisfaction mismatches.
+    volume_satisfaction_aligned:
+      type: boolean
+      description: |
+        Is the time spent aligned with satisfaction?
+        False indicates a mismatch worth investigating.
+    key_factors:
+      type: array
+      items:
+        type: string
+      maxItems: 5
+      description: What's driving this score up or down?
+      example: ["Great team collaboration", "Too many meetings", "Learning new skills"]
+    trend:
+      type: string
+      enum: [improving, stable, declining]
+      description: Direction of change from last assessment
+    trend_reason:
+      type: string
+      maxLength: 200
+      description: What's causing the trend?
+
+# Health-specific dimension with sub-dimensions
+HealthDimensionDetail:
+  allOf:
+    - $ref: '#/DimensionDetail'
+    - type: object
+      description: |
+        Health requires sub-dimensions because DYL's Health encompasses
+        physical, emotional, and spiritual wellbeing.
+      properties:
+        sub_dimensions:
+          type: object
+          properties:
+            physical:
+              type: integer
+              minimum: 0
+              maximum: 10
+              description: Exercise, nutrition, sleep, energy
+            emotional:
+              type: integer
+              minimum: 0
+              maximum: 10
+              description: Mood, stress management, mental health
+            spiritual:
+              type: integer
+              minimum: 0
+              maximum: 10
+              description: Meaning, purpose, mindfulness, values alignment
+          description: |
+            Health sub-scores aggregate to the headline health score.
+            Low scores in specific sub-dimensions guide interventions.
+        aggregate_method:
+          type: string
+          enum: [average, minimum, custom]
+          default: average
+          description: How sub-dimensions aggregate to headline score
+
+# ============================================
+# Status Enums
+# ============================================
+
+CampaignStatus:
+  type: string
+  description: |
+    Current lifecycle state of a campaign.
+
+    ## Lifecycle Flow
+
+    ```
+    active → paused → active (can pause/resume multiple times)
+    active → pivoted (major direction change, often creates new campaign)
+    active → completed (successful conclusion with decision)
+    active → abandoned (stopped without conclusion - requires reason)
+    ```
+
+    ## Key Principle
+
+    Every campaign should end with a DECISION, even if that decision is
+    "not now" or "wrong question." Abandoned is for when external
+    circumstances force stopping, not for giving up.
+
+  oneOf:
+    - const: active
+      title: Active
+      description: |
+        Campaign is currently being explored with active effort.
+        Examples:
+        - Running prototypes and gathering evidence
+        - Regular coaching sessions scheduled
+        - Actively applying to jobs in a job search campaign
+        Key indicator: Recent activity within the last 2 weeks.
+    - const: paused
+      title: Paused
+      description: |
+        Temporarily on hold due to life circumstances. Intention to resume.
+        Examples:
+        - Family emergency requiring full attention
+        - Seasonal break (holidays, vacation)
+        - Waiting for external dependency (visa, funding)
+        - Burnout recovery period
+        Important: Document pause reason and intended resume date.
+        Anti-pattern: Pausing to avoid difficult decisions.
+    - const: pivoted
+      title: Pivoted
+      description: |
+        Direction fundamentally changed based on learnings. This is a WIN.
+        Examples:
+        - Started exploring "should I get an MBA?" and discovered the
+          underlying need was "better network" which doesn't require MBA
+        - Began with "move to NYC" campaign, pivoted to "find community"
+        Key insight: Pivoting means the process WORKED - you learned something.
+        Usually creates a NEW campaign with the refined question.
+    - const: completed
+      title: Completed
+      description: |
+        Successfully concluded with a clear decision.
+        Examples:
+        - Made a job offer acceptance (career campaign)
+        - Decided to stay in current city (location campaign)
+        - Launched the side project (business campaign)
+        Required: Document the decision and key learnings.
+        Celebration: Completed campaigns deserve acknowledgment!
+    - const: abandoned
+      title: Abandoned
+      description: |
+        Stopped without reaching a conclusion. Requires documented reason.
+        Examples:
+        - Life circumstances made the question irrelevant (got laid off
+          during "should I ask for promotion" campaign)
+        - Realized the question was wrong but not ready for new one
+        - External factors closed all options
+        Warning: If abandoning because it's hard, consider pivoting instead.
+        Required: Document why and what was learned, even if incomplete.
+  example: "active"
+
+HypothesisStatus:
+  type: string
+  description: |
+    Current state of a hypothesis. Status progression:
+    ```
+    untested → testing → validated/invalidated/refined
+                 ↓
+              paused → testing (can pause/resume)
+    ```
+
+    ## Key Principle
+
+    Hypotheses are BELIEFS to test, not goals to achieve.
+    Both validation and invalidation are valuable outcomes.
+
+  oneOf:
+    - const: untested
+      title: Untested
+      description: |
+        New hypothesis with no prototypes yet.
+        Examples:
+        - "I believe I would enjoy product management" (no PMs talked to yet)
+        - "I think Seattle would be a good fit" (haven't visited)
+        Next step: Design a prototype to test this belief.
+        Warning: Hypotheses should not stay untested for long.
+    - const: testing
+      title: Testing
+      description: |
+        Active prototypes are in progress to test this hypothesis.
+        Examples:
+        - Currently doing informational interviews about PM roles
+        - In the middle of a trial period at a new gym
+        Key indicator: At least one active prototype exists.
+    - const: paused
+      title: Paused
+      description: |
+        Testing temporarily on hold. Intention to resume.
+        Examples:
+        - Waiting for a contact to become available
+        - Other hypothesis is higher priority right now
+        - External blocker (budget, timing, health)
+        Anti-pattern: Pausing because you fear the answer.
+    - const: validated
+      title: Validated
+      description: |
+        Evidence supports the hypothesis. The belief appears to be TRUE.
+        Examples:
+        - Multiple PM conversations confirmed you'd enjoy the work
+        - Trial period at company showed good culture fit
+        Important: Validation doesn't mean CERTAINTY - just enough
+        confidence to move forward or create new hypotheses.
+    - const: invalidated
+      title: Invalidated
+      description: |
+        Evidence refutes the hypothesis. The belief appears to be FALSE.
+        Examples:
+        - Job shadow revealed the work is tedious, not creative
+        - Visited NYC and confirmed you hate big cities
+        This is a WIN - you saved time/effort on a wrong path.
+        Celebration: Invalidation is valuable data!
+    - const: refined
+      title: Refined
+      description: |
+        Original hypothesis was modified based on learning.
+        Examples:
+        - "I'd enjoy PM" became "I'd enjoy PM at a startup, not enterprise"
+        - "Seattle is ideal" became "Pacific Northwest is ideal"
+        This indicates the learning process is working - you're getting
+        more specific about what you actually want/need.
+  example: "testing"
+
+PrototypeStatus:
+  type: string
+  description: |
+    Current state of a prototype experiment.
+
+    ## Lifecycle
+
+    ```
+    planned → in_progress → completed
+                  ↓
+              cancelled (with reason)
+    ```
+
+    ## Key Principle
+
+    Prototypes are EXPERIMENTS, not commitments.
+    The goal is learning, not success.
+
+  oneOf:
+    - const: planned
+      title: Planned
+      description: |
+        Prototype is scheduled but not yet started.
+        Examples:
+        - Coffee chat scheduled for next Tuesday
+        - Job shadow arranged but not yet happened
+        - Application drafted but not submitted
+        Warning: Prototypes shouldn't stay planned for long.
+        Best practice: Time-box to start within 2 weeks.
+    - const: in_progress
+      title: In Progress
+      description: |
+        Prototype is currently running.
+        Examples:
+        - In the middle of a 2-week trial period
+        - Interview process ongoing (submitted, waiting for response)
+        - Currently reading/researching for an immersion prototype
+        Key indicator: Active effort is being spent.
+    - const: completed
+      title: Completed
+      description: |
+        Prototype finished. Evidence should be captured.
+        Examples:
+        - Had the coffee chat, documented learnings
+        - Finished the job shadow, recorded observations
+        - Completed the trial period, summarized experience
+        Required: At least one piece of Evidence must be logged.
+        Important: "Completed" includes prototypes where nothing happened
+        (e.g., person no-showed) - that's still data!
+    - const: cancelled
+      title: Cancelled
+      description: |
+        Prototype stopped before completion. Reason required.
+        Examples:
+        - Contact became unavailable indefinitely
+        - Realized this prototype won't test the hypothesis
+        - External circumstances changed (budget cut, timing)
+        Important: Document why it was cancelled and any partial learnings.
+        Anti-pattern: Cancelling because you're afraid of the answer.
+  example: "planned"
+
+# ============================================
+# Prototype Types (Domain-Agnostic)
+# ============================================
+
+PrototypeType:
+  type: string
+  description: |
+    High-level category of prototype experiment. These are universal types
+    that work across any domain (career, business, location, etc.)
+
+    ## Risk/Effort Spectrum
+
+    ```
+    Low effort/risk ──────────────────────────────── High effort/risk
+    conversation → observation → micro_experiment → immersion → evaluation
+    ```
+
+    ## Key Principle
+
+    Start with LOWER effort prototypes. Don't jump to immersion
+    when a conversation would give you the answer.
+
+  oneOf:
+    - const: conversation
+      title: Conversation
+      description: |
+        Talk to someone with relevant experience or perspective.
+        Subtypes: coffee_chat, informational_interview, phone_call, networking_event
+        Examples:
+        - 30-minute chat with a PM to learn about the role
+        - Call with someone who moved to Seattle
+        - Networking event to meet startup founders
+        When to use: ALWAYS start here. Cheapest way to learn.
+        Anti-pattern: Skipping conversations because you're "too senior."
+    - const: observation
+      title: Observation
+      description: |
+        Watch or shadow someone in the target situation.
+        Subtypes: job_shadow, site_visit, research, class
+        Examples:
+        - Shadow a data scientist for a day
+        - Visit a co-working space you're considering
+        - Attend a meetup in the target community
+        When to use: When conversations have given you enough to see if
+        the reality matches what people describe.
+    - const: immersion
+      title: Immersion
+      description: |
+        Temporary experience of the target situation.
+        Subtypes: trial_period, contract_work, volunteer, side_project
+        Examples:
+        - 2-week trial at a startup
+        - Volunteer at a non-profit in your target field
+        - Build a side project using the target tech stack
+        When to use: After conversations and observations suggest fit.
+        Higher effort, but gives the most authentic data.
+    - const: evaluation
+      title: Evaluation
+      description: |
+        Formal assessment or interview process.
+        Subtypes: interview, assessment, pitch_meeting, application
+        Examples:
+        - Go through an interview loop (even if not sure you want the job)
+        - Submit application to test your positioning
+        - Pitch your startup idea for feedback
+        Key insight: Evaluations are TWO-WAY. You're evaluating them too.
+        When to use: When ready to test external validation.
+    - const: micro_experiment
+      title: Micro Experiment
+      description: |
+        Small-scale test of a specific aspect or assumption.
+        Subtypes: a_b_test, time_trial, skill_test, habit_trial
+        Examples:
+        - Try remote work for one week to test if you like it
+        - Spend 2 hours/day on side project to test energy
+        - A/B test two different resume approaches
+        When to use: When you have a specific variable to isolate.
+  example: "conversation"
+
+PrototypeSubtype:
+  type: string
+  description: |
+    Specific variant of prototype type. Use the subtype that most
+    precisely describes your experiment.
+
+    ## Parent Type Mapping
+
+    | Parent Type | Subtypes |
+    |-------------|----------|
+    | conversation | coffee_chat, informational_interview, phone_call, networking_event |
+    | observation | job_shadow, site_visit, research, class |
+    | immersion | trial_period, contract_work, volunteer, side_project |
+    | evaluation | interview, assessment, pitch_meeting, application |
+    | micro_experiment | a_b_test, time_trial, skill_test, habit_trial |
+
+  oneOf:
+    # === Conversation Subtypes ===
+    - const: coffee_chat
+      title: Coffee Chat
+      description: |
+        Informal conversation over coffee, meal, or casual setting.
+        Duration: 30-60 minutes
+        Examples:
+        - Grabbing coffee with a friend-of-a-friend in your target field
+        - Lunch with a former colleague now at a company you're curious about
+        Best for: Low-pressure exploration, building relationships.
+    - const: informational_interview
+      title: Informational Interview
+      description: |
+        Structured learning conversation with prepared questions.
+        Duration: 30-45 minutes
+        Examples:
+        - Scheduled call with questions about day-to-day of a PM role
+        - Meeting with specific agenda about startup life
+        Best for: Targeted learning when you know what to ask.
+    - const: phone_call
+      title: Phone Call
+      description: |
+        Remote conversation via phone or video.
+        Duration: 15-30 minutes
+        Examples:
+        - Quick call to clarify one specific question
+        - Video chat when in-person isn't practical
+        Best for: Geographic barriers, busy schedules.
+    - const: networking_event
+      title: Networking Event
+      description: |
+        Group setting conversation at events, meetups, or conferences.
+        Duration: 2-4 hours (many brief conversations)
+        Examples:
+        - Industry meetup where you talk to 5-10 people
+        - Conference networking session
+        Best for: Breadth of perspectives, finding specific people to follow up with.
+
+    # === Observation Subtypes ===
+    - const: job_shadow
+      title: Job Shadow
+      description: |
+        Follow someone doing the work for a day or portion of day.
+        Duration: 4-8 hours
+        Examples:
+        - Shadow a data scientist through their workday
+        - Observe a VC partner taking pitch meetings
+        Best for: Seeing the reality vs. the description.
+    - const: site_visit
+      title: Site Visit
+      description: |
+        Visit a location, office, or physical space.
+        Duration: 1-4 hours
+        Examples:
+        - Tour a potential office space
+        - Visit a city you're considering moving to
+        - Check out a co-working space
+        Best for: Environmental factors that matter (commute, vibe, culture).
+    - const: research
+      title: Research
+      description: |
+        Deep-dive learning through reading, watching, or studying.
+        Duration: Variable (hours to days)
+        Examples:
+        - Read 5 articles about the industry
+        - Watch documentary about startup life
+        - Study company financials and reviews
+        Best for: Background knowledge before conversations.
+    - const: class
+      title: Class
+      description: |
+        Attend a learning session, workshop, or educational event.
+        Duration: 1 hour to multi-week course
+        Examples:
+        - Attend a UX design workshop
+        - Take a free online course in the target skill
+        - Join a bootcamp information session
+        Best for: Skill testing and learning culture.
+
+    # === Immersion Subtypes ===
+    - const: trial_period
+      title: Trial Period
+      description: |
+        Short-term experience of days to weeks in the target situation.
+        Duration: 1-4 weeks
+        Examples:
+        - 2-week trial at a startup before committing
+        - Week living in a city you're considering
+        Best for: Full experience without full commitment.
+        Higher effort, but highest quality data.
+    - const: contract_work
+      title: Contract Work
+      description: |
+        Temporary paid work in the target role/company.
+        Duration: Weeks to months
+        Examples:
+        - Freelance project for target company
+        - Short-term contract to test company culture
+        Best for: Getting paid while gathering evidence.
+    - const: volunteer
+      title: Volunteer
+      description: |
+        Unpaid experience in the target domain.
+        Duration: Variable
+        Examples:
+        - Volunteer at non-profit using target skills
+        - Help a startup for free to see if you like the work
+        - Pro bono consulting in target field
+        Best for: When paid options aren't available.
+    - const: side_project
+      title: Side Project
+      description: |
+        Personal project in the target domain.
+        Duration: Variable (ongoing)
+        Examples:
+        - Build an app using the technology you're curious about
+        - Write a newsletter in the target field
+        - Create a portfolio project
+        Best for: Self-directed exploration, building evidence.
+
+    # === Evaluation Subtypes ===
+    - const: interview
+      title: Interview
+      description: |
+        Formal job or opportunity interview.
+        Duration: 30 minutes to full day (onsite)
+        Examples:
+        - Go through full interview loop (even if not sure you want it)
+        - Phone screen to test market positioning
+        Best for: Testing external validation and market value.
+        Insight: Interviews are prototypes - you don't have to accept!
+    - const: assessment
+      title: Assessment
+      description: |
+        Skill or fit evaluation.
+        Duration: Variable
+        Examples:
+        - Take a coding assessment
+        - Do a case study exercise
+        - Complete a personality assessment
+        Best for: Objective feedback on capabilities.
+    - const: pitch_meeting
+      title: Pitch Meeting
+      description: |
+        Present an idea for feedback.
+        Duration: 30-60 minutes
+        Examples:
+        - Pitch startup idea to potential investors
+        - Present business plan to mentors
+        Best for: Testing ideas and getting expert feedback.
+    - const: application
+      title: Application
+      description: |
+        Submit a formal application.
+        Duration: 1-4 hours to complete
+        Examples:
+        - Submit job application to see response
+        - Apply to accelerator program
+        - Submit conference talk proposal
+        Best for: Testing positioning and competitiveness.
+
+    # === Micro-experiment Subtypes ===
+    - const: a_b_test
+      title: A/B Test
+      description: |
+        Compare two options to see which works better.
+        Duration: Variable
+        Examples:
+        - Send two versions of resume to similar jobs
+        - Try two different morning routines
+        - Test two pricing strategies
+        Best for: When you have two specific options to compare.
+    - const: time_trial
+      title: Time Trial
+      description: |
+        Test something for a specific, bounded duration.
+        Duration: Fixed period (1 day to 4 weeks)
+        Examples:
+        - Try remote work for one week
+        - Eat vegetarian for 30 days
+        - Wake up at 6am for 2 weeks
+        Best for: Habit or lifestyle changes.
+    - const: skill_test
+      title: Skill Test
+      description: |
+        Test a specific capability or skill.
+        Duration: 1-4 hours
+        Examples:
+        - Do a timed coding challenge
+        - Take a design exercise
+        - Complete a writing sample
+        Best for: Assessing current skill level.
+    - const: habit_trial
+      title: Habit Trial
+      description: |
+        Test a new routine or habit.
+        Duration: 2-4 weeks (habit formation period)
+        Examples:
+        - Try journaling every morning
+        - Test a new exercise routine
+        - Implement a new productivity system
+        Best for: Lifestyle prototypes.
+  example: "coffee_chat"
+
+# ============================================
+# Evidence Types
+# ============================================
+
+EvidenceType:
+  type: string
+  description: |
+    Nature of the evidence collected.
+
+    ## Key Principle
+
+    ALL types of evidence are valid. Emotions are data.
+    Don't dismiss evidence just because it's subjective.
+
+  oneOf:
+    - const: insight
+      title: Insight
+      description: |
+        Qualitative learning or realization.
+        Examples:
+        - "I realized I care more about autonomy than salary"
+        - "The conversation revealed that PM work is more meetings than I expected"
+        - "I noticed I was energized talking about this, not drained"
+        When to use: For "aha" moments and qualitative learnings.
+    - const: data
+      title: Data
+      description: |
+        Quantitative or factual measurement.
+        Examples:
+        - "The role pays $150K-$180K based on 5 data points"
+        - "3 out of 4 people I talked to mentioned culture issues"
+        - "It takes 45 minutes to commute at rush hour"
+        When to use: For hard facts and numbers.
+    - const: feedback
+      title: Feedback
+      description: |
+        External opinion or reaction from others.
+        Examples:
+        - "Interviewer said my system design needs work"
+        - "Friend said I seem happier when talking about this path"
+        - "Mentor advised against the startup route"
+        When to use: For external perspectives and assessments.
+    - const: emotion
+      title: Emotion
+      description: |
+        Personal emotional response. THIS IS VALID DATA.
+        Examples:
+        - "I felt excited and energized during the job shadow"
+        - "The thought of this role fills me with dread"
+        - "I noticed relief when the interview was cancelled"
+        Key insight: Gut feelings often know before your brain does.
+    - const: observation
+      title: Observation
+      description: |
+        Neutral factual observation without interpretation.
+        Examples:
+        - "The office was quiet and people wore headphones"
+        - "My contact checked their phone 5 times during our 30-minute chat"
+        - "The commute involves 2 transfers"
+        When to use: For objective facts to interpret later.
+  example: "insight"
+
+EvidenceStrength:
+  type: string
+  description: |
+    How strongly this evidence supports or refutes the hypothesis.
+    Weak evidence requires more data; strong evidence may be decisive.
+
+    ## Key Principle
+
+    Be honest about strength. Weak evidence isn't bad -
+    it just means you need more data.
+
+  oneOf:
+    - const: weak
+      title: Weak
+      description: |
+        Suggestive but not conclusive. Single data point.
+        Examples:
+        - One person's opinion in a coffee chat
+        - Brief observation during a 15-minute visit
+        - Gut feeling without supporting facts
+        Next step: Gather more evidence before deciding.
+    - const: moderate
+      title: Moderate
+      description: |
+        Meaningful signal worth considering. Multiple data points.
+        Examples:
+        - Consistent feedback from 2-3 people
+        - Pattern observed across multiple interactions
+        - Strong emotional response backed by some facts
+        Next step: Continue gathering, but starting to form picture.
+    - const: strong
+      title: Strong
+      description: |
+        Significant evidence for decision-making. Clear pattern.
+        Examples:
+        - 5+ people saying the same thing
+        - Extended immersion experience (weeks)
+        - Multiple strong emotional responses
+        Next step: May be sufficient for decisions if aligned.
+    - const: decisive
+      title: Decisive
+      description: |
+        Clear enough to act on confidently.
+        Examples:
+        - Trial period confirmed fit/lack of fit
+        - Overwhelming pattern with no contradictions
+        - Direct experience that answers the question
+        Next step: Ready to make decisions.
+  example: "moderate"
+
+EvidenceDirection:
+  type: string
+  description: |
+    Whether evidence supports or refutes the hypothesis.
+
+    ## Key Principle
+
+    "Transforms" is often the most valuable direction -
+    it means you learned the question itself needs reframing.
+
+  oneOf:
+    - const: supports
+      title: Supports
+      description: |
+        Evidence aligns with the hypothesis.
+        Examples:
+        - "I think I'd like PM" + people in role seem happy = supports
+        - "I should move to Seattle" + visit confirmed vibe fit = supports
+        Note: Even strong support isn't certainty. Keep gathering.
+    - const: refutes
+      title: Refutes
+      description: |
+        Evidence contradicts the hypothesis. This is VALUABLE.
+        Examples:
+        - "I think I'd like PM" + job shadow was boring = refutes
+        - "Remote work would be ideal" + felt isolated after 2 weeks = refutes
+        Key insight: Refutation saves you from a wrong path. Celebrate it.
+    - const: neutral
+      title: Neutral
+      description: |
+        Evidence doesn't clearly support either direction.
+        Examples:
+        - Mixed signals from different sources
+        - Data that's true but doesn't help answer the question
+        - "It depends" type insights
+        Next step: Need different prototypes or reframed questions.
+    - const: transforms
+      title: Transforms
+      description: |
+        Evidence suggests reframing the question entirely.
+        Examples:
+        - "Should I become a PM?" → "What I want is influence, PM is one path"
+        - "Should I move to NYC?" → "I need community, location is secondary"
+        Key insight: This is often the MOST valuable evidence type.
+        It means the process is working - you're learning the real question.
+  example: "supports"
+
+# ============================================
+# Constraint Types
+# ============================================
+
+ConstraintType:
+  type: string
+  description: |
+    Nature of the constraint boundary.
+
+    ## Key Principle
+
+    Most constraints people cite are "assumed" not "hard."
+    Question constraints before accepting them.
+
+  oneOf:
+    - const: hard
+      title: Hard
+      description: |
+        Immutable constraint that cannot be changed.
+        Examples:
+        - Visa requirements (legal status)
+        - Diagnosed health conditions
+        - Minor children's school schedule
+        - Contractual non-compete (with legal review)
+        Test: If you REALLY wanted to, could you change this? If truly no, it's hard.
+        Warning: Many "hard" constraints are actually assumed.
+    - const: soft
+      title: Soft
+      description: |
+        Negotiable constraint that COULD be changed with effort.
+        Examples:
+        - "I need to make $150K" (could you live on less?)
+        - "I can't relocate" (is this about partner, or assumption?)
+        - "I need to be home by 6pm" (every day, or most days?)
+        Key insight: Soft constraints are tradeoffs, not walls.
+    - const: assumed
+      title: Assumed
+      description: |
+        Belief that should be questioned. Often not actually a constraint.
+        Examples:
+        - "I'm too old to change careers" (is this true?)
+        - "I need an MBA for this role" (do you really?)
+        - "No one will hire me without X" (have you tested this?)
+        - "I can't work remotely in this field" (have you looked?)
+        Key insight: Assumed constraints are the first to challenge.
+        Many of these dissolve under examination.
+    - const: temporary
+      title: Temporary
+      description: |
+        Time-bound constraint with a known end date.
+        Examples:
+        - "Can't travel until visa is approved" (expected: 3 months)
+        - "Caring for parent through recovery" (expected: 6 weeks)
+        - "Kids in school until June" (then can relocate)
+        Key insight: Temporary constraints affect timing, not possibility.
+        Plan for after the constraint lifts.
+  example: "soft"
+
+ConstraintCategory:
+  type: string
+  description: |
+    Domain of the constraint.
+
+    ## Key Insight
+
+    Some categories are more likely to be "assumed" than "hard":
+    - skill, time, financial: Often assumed, worth questioning
+    - legal, health: Often genuinely hard
+    - relationship, values: Require conversation, not assumption
+
+  oneOf:
+    - const: time
+      title: Time
+      description: |
+        Scheduling, deadlines, availability constraints.
+        Examples:
+        - "I only have 5 hours/week for job search"
+        - "Need to start new role by March"
+        - "Can only do phone calls between 9-5"
+        Challenge: Can you create more time by dropping something else?
+    - const: financial
+      title: Financial
+      description: |
+        Budget, income, or money-related constraints.
+        Examples:
+        - "I need to make at least $150K"
+        - "Can't afford to take a pay cut"
+        - "Need health insurance for family"
+        Challenge: What's the REAL minimum? Have you done the math?
+    - const: geographic
+      title: Geographic
+      description: |
+        Location-related constraints.
+        Examples:
+        - "Need to stay in Bay Area for partner's job"
+        - "Can't do fully remote (need office for focus)"
+        - "Must be within 30 minutes of parents"
+        Challenge: Is this your constraint or someone else's?
+    - const: relationship
+      title: Relationship
+      description: |
+        Partner, family, or community needs.
+        Examples:
+        - "Partner can't relocate due to their job"
+        - "Need to be near aging parents"
+        - "Kids are in a school we don't want to leave"
+        Challenge: Have you actually discussed this with them?
+    - const: health
+      title: Health
+      description: |
+        Physical or mental health factors.
+        Examples:
+        - "Can't do high-stress environments (anxiety)"
+        - "Need good health insurance for chronic condition"
+        - "Can't travel frequently (back issues)"
+        Note: Health constraints are often legitimately hard.
+        But: "I'm not good at X" is usually assumed, not health.
+    - const: legal
+      title: Legal
+      description: |
+        Visa, contracts, regulations, legal status.
+        Examples:
+        - "Need visa sponsorship"
+        - "Non-compete prevents working at competitor for 1 year"
+        - "Professional license only valid in this state"
+        Note: Legal constraints are often genuinely hard.
+        But: Get legal advice - many are more flexible than assumed.
+    - const: skill
+      title: Skill
+      description: |
+        Current capabilities and experience.
+        Examples:
+        - "I don't have the technical skills for this role"
+        - "I've never managed people before"
+        - "I don't have experience in this industry"
+        Warning: Skill constraints are almost ALWAYS assumed.
+        Skills can be learned. Experience can be gained.
+        Challenge: What would it take to develop this skill?
+    - const: values
+      title: Values
+      description: |
+        Non-negotiable personal principles.
+        Examples:
+        - "Won't work for tobacco/gambling/weapons companies"
+        - "Need work that aligns with environmental values"
+        - "Won't sacrifice family time for work"
+        Note: Values constraints SHOULD be hard.
+        But: Make sure they're YOUR values, not inherited assumptions.
+  example: "time"
+
+# ============================================
+# Energy Tracking
+# ============================================
+
+EnergyLevel:
+  type: integer
+  minimum: -5
+  maximum: 5
+  description: |
+    Energy impact of an activity.
+    - Negative values (-5 to -1): Draining
+    - Zero (0): Neutral
+    - Positive values (1 to 5): Energizing
+  example: 3
+
+FlowState:
+  type: string
+  description: |
+    Whether flow state was achieved during the activity.
+    Flow = complete absorption, time flies, intrinsically rewarding.
+
+    ## Flow Characteristics (Csikszentmihalyi)
+
+    - Challenge matches skill level
+    - Clear goals and immediate feedback
+    - Complete concentration, loss of self-consciousness
+    - Sense of control
+    - Time distortion (usually feels faster)
+    - Intrinsically rewarding (would do it for its own sake)
+
+  oneOf:
+    - const: none
+      title: None
+      description: |
+        No flow experienced during the activity.
+        Characteristics:
+        - Time felt slow or normal
+        - Was aware of distractions
+        - Felt effort and resistance
+        - Was watching the clock
+        Examples:
+        - Boring meeting where you're counting the minutes
+        - Task that feels like a chore
+        - Work that requires force of will to continue
+        Note: No flow doesn't mean bad - some work is just work.
+    - const: partial
+      title: Partial
+      description: |
+        Moments of flow, but not sustained.
+        Characteristics:
+        - Had some moments of absorption
+        - Got interrupted or distracted
+        - Time felt faster during some parts
+        - Would have liked to continue
+        Examples:
+        - Started coding and got into it, but got pulled into meeting
+        - Good conversation that got interrupted
+        - Creative work with occasional flow moments
+        Note: Partial flow suggests potential - what caused the breaks?
+    - const: full
+      title: Full
+      description: |
+        Extended flow state - significant time in "the zone."
+        Characteristics:
+        - Hours felt like minutes
+        - Forgot about surroundings
+        - Didn't want to stop
+        - Felt energized afterward (despite effort)
+        Examples:
+        - Coding session where you looked up and 4 hours passed
+        - Deep conversation where time disappeared
+        - Creative work that felt effortless
+        Key insight: Full flow activities are STRONG signals about fit.
+  example: "partial"
+
+# ============================================
+# Decision Framework
+# ============================================
+
+DecisionType:
+  type: string
+  description: |
+    Category of decision being made.
+
+    ## Key Principle
+
+    All decisions are valid outcomes. A "rejection" or "pivot"
+    is just as valuable as a "commitment" - it's progress.
+
+  oneOf:
+    - const: commitment
+      title: Commitment
+      description: |
+        Moving forward with an option.
+        Examples:
+        - Accepting a job offer
+        - Signing a lease in the new city
+        - Launching the side project full-time
+        - Committing to a relationship
+        Requirements before commitment:
+        - At least one completed prototype
+        - Evidence strength moderate or higher
+        - Consideration of alternatives (not just first option)
+        Note: Commitment doesn't mean permanent - it means proceeding.
+    - const: pivot
+      title: Pivot
+      description: |
+        Changing direction based on learning. This is a WIN.
+        Examples:
+        - "I thought I wanted PM, but discovered I want consulting"
+        - "Location doesn't matter as much as I thought"
+        - "The real need is flexibility, not this specific company"
+        Key insight: Pivots mean the process is WORKING.
+        You're learning and refining, not failing.
+    - const: rejection
+      title: Rejection
+      description: |
+        Explicitly deciding NOT to pursue an option.
+        Examples:
+        - "I will not apply to Company X despite the offer"
+        - "Remote work is not for me - I'm removing it from consideration"
+        - "Startup life isn't right for this phase of my life"
+        Key insight: Explicit rejection is valuable - it narrows focus.
+        Anti-pattern: Keeping options "open" indefinitely to avoid decisions.
+    - const: pause
+      title: Pause
+      description: |
+        Temporary hold with intention to resume.
+        Examples:
+        - "Pausing job search for health focus"
+        - "Putting location decision on hold until partner's situation clears"
+        - "Not deciding on role change until after Q4"
+        Requirements:
+        - Document the reason for pause
+        - Set a resume date or trigger condition
+        Anti-pattern: Pausing to avoid difficult decisions.
+    - const: escalation
+      title: Escalation
+      description: |
+        Need more data before deciding. Not ready to commit or reject.
+        Examples:
+        - "Need 2 more informational interviews before deciding"
+        - "Want to complete the trial period first"
+        - "Waiting for competing offer to compare"
+        Requirements:
+        - Specific actions to gather needed evidence
+        - Timeline for when evidence will be available
+        Anti-pattern: Endless escalation without decision.
+  example: "commitment"
+
+DecisionConfidence:
+  type: string
+  description: |
+    Confidence level in the decision.
+    Lower confidence is acceptable early; decisions should be revisited.
+
+    ## Key Principle
+
+    You don't need high confidence to decide.
+    Sometimes "good enough" evidence is enough to move forward.
+
+  oneOf:
+    - const: low
+      title: Low
+      description: |
+        Gut feeling with limited evidence.
+        When this is OK:
+        - Reversible decisions (can change later)
+        - Low-stakes experiments
+        - Need to move forward to gather more data
+        Examples:
+        - "I think this might work, let me try it"
+        - "My gut says yes but I can't articulate why"
+        Warning: Low confidence on major, irreversible decisions needs attention.
+    - const: medium
+      title: Medium
+      description: |
+        Some supporting evidence, but not overwhelming.
+        When this is OK:
+        - Most decisions in life design
+        - When evidence is mixed but trending
+        - When reversibility exists
+        Examples:
+        - "3 out of 4 signals point this direction"
+        - "Evidence supports it, but I haven't tested alternatives"
+        Note: Medium confidence is often SUFFICIENT to proceed.
+    - const: high
+      title: High
+      description: |
+        Strong evidence alignment. Clear direction.
+        Characteristics:
+        - Multiple data points converging
+        - Emotional and rational alignment
+        - No major red flags
+        Examples:
+        - "Every prototype pointed here"
+        - "Head and heart agree"
+        - "Evidence clearly supports this path"
+        Note: High confidence doesn't mean 100% certainty.
+    - const: very_high
+      title: Very High
+      description: |
+        Multiple strong evidence sources. Clear and decisive.
+        Characteristics:
+        - Overwhelming evidence
+        - No contradictions
+        - Would recommend to anyone in similar situation
+        Examples:
+        - "Trial period confirmed fit in every dimension"
+        - "5+ people in the role all said the same thing"
+        - "Every hypothesis was validated"
+        Note: Very high confidence is rare - don't wait for it on every decision.
+  example: "medium"
+
+# ============================================
+# Session Types
+# ============================================
+
+SessionType:
+  type: string
+  description: |
+    Type of coaching interaction.
+
+    ## Key Principle
+
+    Different session types serve different purposes.
+    Match the session type to the user's current need.
+
+  oneOf:
+    - const: check_in
+      title: Check-in
+      description: |
+        Regular progress review. The "default" session type.
+        Duration: 15-30 minutes
+        Purpose:
+        - Review what happened since last session
+        - Check progress on action items
+        - Update life balance if needed
+        - Set focus for next period
+        Frequency: Weekly during active campaigns
+        Examples:
+        - "What did you accomplish this week?"
+        - "How did the coffee chat go?"
+        - "Any blockers or surprises?"
+    - const: planning
+      title: Planning
+      description: |
+        Strategy and next steps. Forward-looking session.
+        Duration: 30-60 minutes
+        Purpose:
+        - Design prototypes
+        - Prioritize hypotheses
+        - Create action plans
+        - Set goals and timelines
+        When to use:
+        - Starting a new campaign
+        - After completing a prototype (what's next?)
+        - When feeling stuck (need a plan)
+        Examples:
+        - "What prototypes should we design?"
+        - "How do we prioritize these hypotheses?"
+        - "What's the plan for the next 2 weeks?"
+    - const: reflection
+      title: Reflection
+      description: |
+        Deep dive on learnings. Backward-looking session.
+        Duration: 30-60 minutes
+        Purpose:
+        - Extract insights from experiences
+        - Identify patterns across prototypes
+        - Connect dots between evidence
+        - Synthesize learnings into wisdom
+        When to use:
+        - After a significant prototype
+        - End of a season/phase
+        - When feeling confused about direction
+        Examples:
+        - "What have we learned from these 5 conversations?"
+        - "What patterns are emerging?"
+        - "What does the evidence tell us?"
+    - const: crisis
+      title: Crisis
+      description: |
+        Urgent reframing needed. Emergency session.
+        Duration: Variable (as long as needed)
+        Purpose:
+        - Address urgent emotional distress
+        - Reframe a major setback
+        - Process a significant failure
+        - Navigate unexpected circumstances
+        When to use:
+        - Major rejection or failure
+        - Life event disrupting the campaign
+        - Feeling overwhelmed or hopeless
+        Examples:
+        - "I just got rejected from my dream company"
+        - "Everything fell apart this week"
+        - "I don't know if I can keep doing this"
+        Important: Crisis sessions prioritize emotional support first.
+    - const: celebration
+      title: Celebration
+      description: |
+        Acknowledging wins. Positive reinforcement session.
+        Duration: 15-30 minutes
+        Purpose:
+        - Recognize accomplishments
+        - Build momentum and confidence
+        - Reinforce effective behaviors
+        - Mark milestones
+        When to use:
+        - Completed a major prototype
+        - Made a commitment decision
+        - Achieved a goal
+        - Completed a campaign
+        Examples:
+        - "You got the offer! Let's celebrate."
+        - "You finished all 5 informational interviews!"
+        - "You made a decision - that's huge progress."
+        Key insight: Celebrations are ESSENTIAL, not optional.
+        Anti-pattern: Skipping celebrations to "stay focused."
+  example: "check_in"
+
+# ============================================
+# Error Responses
+# ============================================
+
+Error:
+  type: object
+  description: Standard error response
+  properties:
+    code:
+      type: string
+      description: Machine-readable error code
+      example: "NOT_FOUND"
+    message:
+      type: string
+      description: Human-readable error message
+      example: "Campaign with ID 550e8400-e29b-41d4-a716-446655440000 not found"
+    details:
+      type: object
+      additionalProperties: true
+      description: Additional error context (implementation-specific)
+  required:
+    - code
+    - message
+
+ValidationError:
+  type: object
+  description: Validation error with field-level details
+  properties:
+    code:
+      type: string
+      enum: ["VALIDATION_ERROR"]
+    message:
+      type: string
+      example: "Request validation failed"
+    errors:
+      type: array
+      items:
+        type: object
+        properties:
+          field:
+            type: string
+            description: Field path that failed validation
+            example: "hypotheses[0].statement"
+          message:
+            type: string
+            description: Why validation failed
+            example: "Statement must be a testable belief, not a goal"
+          code:
+            type: string
+            description: Validation rule that failed
+            example: "HYPOTHESIS_MUST_BE_TESTABLE"
+        required:
+          - field
+          - message
+  required:
+    - code
+    - message
+    - errors
+
+# ============================================
+# DYL-Specific Validation Errors
+# ============================================
+
+DYLViolation:
+  type: object
+  description: |
+    A violation of DYL methodology rules. These are behavioral
+    constraints that go beyond schema validation.
+  properties:
+    rule:
+      type: string
+      description: Which DYL rule was violated
+      example: "PROTOTYPE_BEFORE_DECISION"
+    severity:
+      type: string
+      enum: ["warning", "error", "critical"]
+      description: How serious the violation is
+    message:
+      type: string
+      description: Explanation of the violation
+      example: "Cannot make commitment decision without completed prototypes"
+    suggestion:
+      type: string
+      description: How to resolve the violation
+      example: "Complete at least one prototype for the related hypothesis first"
+    context:
+      type: object
+      additionalProperties: true
+      description: Relevant entity IDs and state
+  required:
+    - rule
+    - severity
+    - message

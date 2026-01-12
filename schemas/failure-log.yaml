@@ -1,0 +1,945 @@
+# Failure Log Schema
+# Building Failure Immunity through systematic failure logging and categorization
+# DYL principle: Failures are data, not defeats
+
+FailureLog:
+  type: object
+  description: |
+    A logged failure or rejection used to build "Failure Immunity" -
+    the ability to learn from setbacks without being derailed by them.
+
+    ## DYL Methodology Context
+
+    The DYL methodology emphasizes that failures are essential learning data.
+    By logging and categorizing failures, users:
+    1. Normalize setbacks as part of the process
+    2. Extract actionable insights for improvement
+    3. Build psychological resilience through exposure
+    4. Identify patterns that indicate systemic issues
+
+    ## Failure Types
+
+    - **Screwup**: Simple mistake that can be avoided next time
+    - **Weakness**: Recurring pattern indicating skill/habit gap
+    - **Growth Opportunity**: Failure that reveals new learning path
+    - **External**: Factors outside your control
+    - **Misalignment**: NOT a failure - a successful filter of bad fit
+
+    ## Critical Insight: Misalignment Detection
+
+    **"Half of what you're calling failure is really misalignment."**
+
+    Many setbacks aren't screwups or weaknesses - they're MISALIGNMENT between
+    you and the opportunity. The rejection saved you from a bad fit. This is a
+    reframe: the process WORKED by filtering out a mismatch.
+
+    If your misalignment ratio exceeds 40%, consider refining your targeting
+    criteria rather than "fixing" yourself.
+
+    ## Anti-Pattern: Rumination (ADHD-Aware)
+
+    The goal is NOT to dwell on failures but to:
+    1. Log quickly (while fresh)
+    2. Categorize honestly
+    3. Extract ONE insight
+    4. Move on with the learning
+
+    ## Time-Boxing Protocol (Prevents Analysis Paralysis)
+
+    For those with analytical minds (engineer types, ADHD), there's a risk of
+    hyperfocusing on failure analysis longer than helpful. Use this protocol:
+
+    - **Initial logging**: 10 minutes max
+    - **Deep reflection** (if needed): 20 minutes max, then STOP
+    - **"Good enough" standard**: Once insight extracted + action defined = DONE
+    - **No revisiting**: After marking complete, don't re-analyze
+
+    If you catch yourself overanalyzing something you've already learned from,
+    that's rumination, not learning. Give yourself a timeout.
+
+  required:
+    - id
+    - title
+    - failure_type
+    - occurred_at
+    - insight
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier
+
+    title:
+      type: string
+      minLength: 5
+      maxLength: 150
+      description: Brief description of the failure
+      example: "Rejected after onsite interview at Company X"
+
+    description:
+      type: string
+      maxLength: 1000
+      description: |
+        What happened? Be factual, not self-critical.
+        Focus on observable events, not interpretations.
+      example: "Got to final round, had 5 onsite interviews. Feedback was that I didn't demonstrate enough system design depth. Felt the architecture question went poorly."
+
+    failure_type:
+      type: string
+      description: |
+        Category of failure. Be honest about which type this is.
+        Mis-categorization prevents learning.
+
+        ## Definitions
+
+        **screwup**: A simple, one-time mistake that was avoidable with better
+        attention, preparation, or process. NOT a reflection of your abilities -
+        just human error. Fix the process and move on.
+
+        **weakness**: A recurring pattern that indicates a genuine skill gap or
+        habit that needs development. Unlike screwups, this keeps happening.
+        Requires intentional practice or training to address.
+
+        **growth_opportunity**: A failure that occurred because you stretched
+        beyond your comfort zone. This is a GOOD type of failure - it means
+        you're growing. The outcome was negative but the attempt was valuable.
+
+        **external**: Factors genuinely outside your control caused this outcome.
+        Economy, company politics, timing, other people's decisions. Be careful
+        not to over-use this category as an excuse.
+
+        **misalignment**: Not actually a failure - you "failed" at something
+        that wasn't right for you anyway. This is a reframe: the rejection/outcome
+        saved you from a bad fit. Often discovered in retrospect.
+
+      oneOf:
+        - const: screwup
+          title: Screwup
+          description: |
+            Simple, one-time mistake that was avoidable with better attention.
+            Examples:
+            - Showed up late to interview because you had wrong address
+            - Forgot to attach resume to application
+            - Misread the job requirements and applied to wrong level
+            - Typo in cover letter that spell-check would have caught
+            - Forgot to research the company before interview
+        - const: weakness
+          title: Weakness
+          description: |
+            Recurring pattern indicating a genuine skill or habit gap.
+            Examples:
+            - Consistently freeze during whiteboard coding (pattern across 5+ interviews)
+            - Always underestimate time for projects (missed deadlines repeatedly)
+            - Struggle to articulate accomplishments in STAR format
+            - Get nervous and talk too fast in presentations
+            - Difficulty with system design at scale (feedback in multiple onsites)
+        - const: growth_opportunity
+          title: Growth Opportunity
+          description: |
+            Failure from stretching beyond comfort zone - valuable attempt.
+            Examples:
+            - Applied to a role one level above current (didn't get it, learned what's needed)
+            - Took on a stretch project that didn't succeed (gained experience)
+            - Pitched a bold idea that was rejected (learned to pitch better)
+            - Tried a new interview technique that didn't land (now know what doesn't work)
+            - Negotiated salary aggressively (didn't get the number, but practiced the skill)
+        - const: external
+          title: External
+          description: |
+            Factors genuinely outside your control. Use sparingly.
+            Examples:
+            - Hiring freeze announced after your final round
+            - Role was filled by internal candidate (decided before your interview)
+            - Company had layoffs and cancelled all open positions
+            - Interviewer was having a bad day and was hostile
+            - Economic downturn affected entire industry hiring
+        - const: misalignment
+          title: Misalignment
+          description: |
+            **THIS IS LIKELY 50% OF YOUR "FAILURES"**
+
+            Not a failure at all - the "rejection" saved you from a bad fit.
+            This is SUCCESSFUL FILTERING, not failure. The process worked.
+
+            Signs it's misalignment (not failure):
+            - Interview revealed culture mismatch
+            - Role requirements don't match your working style
+            - Company values don't align with your priorities
+            - You felt relief mixed with disappointment
+            - In retrospect, you're glad it didn't work out
+
+            Examples:
+            - Rejected from a company you later learned has toxic culture
+            - Didn't get role that would have required 80-hour weeks
+            - "Failed" interview for a role that would have been boring
+            - Role required work style incompatible with ADHD
+            - Company wanted someone who would never challenge status quo
+
+            **Reframe**: "The process worked - it filtered out a mismatch."
+
+            If >40% of your failures are misalignment, refine targeting criteria.
+      example: "weakness"
+
+    occurred_at:
+      type: string
+      format: date-time
+      description: When the failure occurred
+
+    life_area:
+      $ref: './common.yaml#/LifeArea'
+      description: Which life area this failure relates to
+      example: "work"
+
+    campaign_id:
+      type: string
+      format: uuid
+      description: Link to related campaign if applicable
+
+    prototype_id:
+      type: string
+      format: uuid
+      description: |
+        Link to prototype that resulted in this failure.
+        Prototype failures are EXPECTED - that's how we learn.
+
+    context:
+      type: object
+      description: Additional context about the failure
+      properties:
+        stage:
+          type: string
+          description: Where in the process did failure occur?
+          example: "Final round onsite"
+        external_factors:
+          type: array
+          items:
+            type: string
+          description: External factors that contributed
+          example: ["Interviewer seemed rushed", "Was asked about tech stack I disclosed I didn't know"]
+        internal_factors:
+          type: array
+          items:
+            type: string
+          description: Internal factors that contributed
+          example: ["Underprepared for system design", "Nervous in whiteboard setting"]
+        controllable:
+          type: array
+          items:
+            type: string
+          description: What WAS within your control?
+          example: ["More mock interviews", "Deeper study of scaling patterns"]
+
+    insight:
+      type: string
+      minLength: 10
+      maxLength: 500
+      description: |
+        REQUIRED. The key learning from this failure.
+        This is the value extracted from the setback.
+        Should be actionable, not just descriptive.
+      example: "I need to practice system design interviews specifically. Reading about systems isn't enough - I need to verbalize and whiteboard designs under time pressure."
+
+    action_items:
+      type: array
+      items:
+        type: object
+        properties:
+          action:
+            type: string
+            description: Specific action to take
+          deadline:
+            type: string
+            format: date
+            description: When to complete by
+          status:
+            type: string
+            enum: [pending, in_progress, completed, skipped]
+      description: Concrete next steps based on the insight
+      example:
+        - action: "Schedule 3 mock system design interviews"
+          deadline: "2025-01-15"
+          status: "pending"
+        - action: "Complete System Design Primer course"
+          deadline: "2025-01-20"
+          status: "in_progress"
+
+    emotional_response:
+      type: object
+      description: |
+        Acknowledging emotional impact is healthy.
+        Suppressing emotions leads to avoidance; processing leads to growth.
+      properties:
+        initial_feeling:
+          type: array
+          items:
+            type: string
+            description: |
+              Emotional responses to failure. Multiple feelings can coexist.
+              Acknowledging emotions is healthy - suppression leads to avoidance.
+            oneOf:
+              - const: disappointed
+                description: "Expected a different outcome. 'I really thought this would work out.'"
+              - const: frustrated
+                description: "Feeling blocked or stuck. 'I keep trying but nothing works.'"
+              - const: embarrassed
+                description: "Worry about how others perceive you. 'What will people think?'"
+              - const: confused
+                description: "Don't understand what went wrong. 'I thought I did well.'"
+              - const: relieved
+                description: "Secretly glad it didn't work out. 'Maybe this wasn't right for me.'"
+              - const: motivated
+                description: "Failure as fuel. 'I'll show them. This makes me want it more.'"
+              - const: neutral
+                description: "No strong emotional reaction. 'It is what it is.'"
+              - const: angry
+                description: "Feeling wronged or treated unfairly. 'This is unfair.'"
+              - const: sad
+                description: "Grief over lost possibility. 'I really wanted this.'"
+          description: How did you feel initially? Select all that apply.
+        intensity:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: How intense was the emotional response? (1-10)
+        processing_notes:
+          type: string
+          maxLength: 300
+          description: Any notes on processing the emotion
+
+    pattern_indicator:
+      type: boolean
+      default: false
+      description: |
+        Is this failure part of a recurring pattern?
+        If true, investigate the root cause more deeply.
+
+    related_failures:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: |
+        Links to other failures that may be related.
+        Used for pattern detection.
+
+    reframe_opportunity:
+      type: string
+      maxLength: 300
+      description: |
+        How might this "failure" actually be reframed?
+        Many rejections are actually misalignments (not failures).
+      example: "The role required on-call 24/7 - rejection may have saved me from a bad fit."
+
+    immunity_contribution:
+      type: object
+      description: How this failure builds immunity
+      properties:
+        exposure_type:
+          type: string
+          enum:
+            - first_time       # First experience of this failure type
+            - familiar         # Have experienced similar before
+            - routine          # This type of failure no longer phases me
+          description: How novel is this type of failure?
+        recovery_time:
+          type: string
+          enum:
+            - hours
+            - days
+            - weeks
+            - ongoing
+          description: How long did it take to bounce back?
+        lessons_applied:
+          type: array
+          items:
+            type: string
+          description: Previous learnings that helped with this failure
+
+    # ============================================
+    # Processing Completion ("Good Enough" Checkpoint)
+    # ============================================
+
+    processing_complete:
+      type: boolean
+      default: false
+      description: |
+        **"Good Enough" Checkpoint**
+
+        Mark TRUE when:
+        1. Failure is categorized
+        2. Insight is extracted
+        3. Action item is defined (if applicable)
+
+        Once marked complete, DO NOT REVISIT for re-analysis.
+        This prevents rumination and analysis paralysis.
+
+        For analytical minds / ADHD: If you're tempted to re-open a completed
+        failure for more analysis, that's a signal to STOP - you've already
+        extracted the value.
+
+    processing_time_minutes:
+      type: integer
+      minimum: 0
+      maximum: 60
+      description: |
+        How long did you spend processing this failure?
+
+        Guidelines (ADHD-friendly time-boxing):
+        - Target: 5-10 minutes for most failures
+        - Maximum: 20 minutes for complex situations
+        - If >20 minutes: You're likely over-analyzing
+
+        Track this to build awareness of rumination patterns.
+
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+    updated_at:
+      type: string
+      format: date-time
+      readOnly: true
+
+  x-ai-instructions: |
+    When a user logs a failure:
+    1. Acknowledge the setback empathetically but briefly
+    2. **FIRST check for misalignment**: "Before we categorize - could this be misalignment rather than failure?"
+       - Signs: relief mixed with disappointment, culture/values mismatch, role wouldn't suit working style
+       - If yes: Reframe as "successful filtering" and celebrate the process working
+    3. If not misalignment, ask for categorization: "Is this a Screwup, Weakness, or Growth Opportunity?"
+    4. Guide insight extraction: "What's the ONE key learning here?"
+    5. Prompt for action: "What specific step will you take as a result?"
+    6. Check for patterns: "Have you seen this type of failure before?"
+    7. **Enforce time-boxing**: "Let's wrap up in the next few minutes - we've extracted the value"
+    8. Mark processing_complete: "Great - this one is processed. No need to revisit."
+
+    ## ADHD-Aware Coaching
+
+    For users with analytical minds or ADHD:
+    - **Watch for over-analysis**: If they keep circling back, gently redirect
+    - **Enforce the "good enough" standard**: "You've extracted the insight and defined the action - that's enough"
+    - **Celebrate their Bias to Action**: "I notice you're already thinking about next steps - that's your strength"
+    - **Time-box explicitly**: "Let's spend 5 more minutes on this, then move forward"
+
+    ## Misalignment Detection Priority
+
+    **"Half of failures are really misalignment"** - Always check this FIRST:
+    - If >40% of recent failures are misalignment, suggest refining targeting criteria
+    - Reframe misalignment as "successful filtering" not failure
+    - Don't let user internalize misalignment as personal deficiency
+
+    DO NOT:
+    - Minimize the failure ("It's no big deal")
+    - Overly dwell on negatives
+    - Let the user spiral into self-criticism
+    - Skip the insight extraction - that's the value
+    - **Allow unlimited analysis time** - enforce time-boxing
+    - **Re-open completed failures** for more analysis
+
+  x-ai-examples:
+    - scenario: "User: Got rejected after onsite at Hooli"
+      response: |
+        That's a real setback, especially after getting to the onsite stage.
+
+        Let me help you process this:
+        1. What type of failure is this? (Screwup, Weakness, Growth Opportunity, External, or Misalignment?)
+        2. What's the ONE key learning from this experience?
+        3. Is this part of a pattern you've seen before?
+
+        Remember: getting to onsite means your resume and phone screens were strong.
+        The rejection is data about this specific interview, not your overall worth.
+
+    - scenario: "User: This is the 5th rejection this month"
+      response: |
+        Five rejections in a month - that's significant volume. Let's look at patterns:
+
+        1. At what stage are most rejections happening?
+           - Resume screen → targeting/positioning issue
+           - Phone screen → communication/framing issue
+           - Technical → skill gap to address
+           - Final round → fit/culture alignment
+
+        2. Check your failure log - any recurring themes?
+
+        3. How's your recovery time? If it's getting longer, you might need a brief pause.
+
+        The good news: 5 rejections means you're taking action. Many people avoid
+        the discomfort of rejection by not trying. You're building immunity.
+
+FailurePatternAnalysis:
+  type: object
+  description: |
+    Aggregate analysis of failure patterns.
+    Used to detect systemic issues and guide focused improvement.
+  properties:
+    total_failures_logged:
+      type: integer
+      description: Total failures in the log
+
+    by_type:
+      type: object
+      properties:
+        screwup:
+          type: integer
+        weakness:
+          type: integer
+        growth_opportunity:
+          type: integer
+        external:
+          type: integer
+        misalignment:
+          type: integer
+
+    misalignment_ratio:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 1
+      description: |
+        Percentage of failures classified as misalignment.
+
+        **Critical Threshold: 40%**
+
+        If misalignment_ratio > 0.40:
+        - You're not failing - you're targeting wrong opportunities
+        - Refine your criteria rather than "fixing" yourself
+        - Review: role type, company culture, work style requirements
+
+        This metric helps distinguish between:
+        - "I need to improve" (low misalignment ratio)
+        - "I need to target better" (high misalignment ratio)
+
+    average_processing_time_minutes:
+      type: number
+      format: float
+      description: |
+        Average time spent processing failures.
+
+        **ADHD-Aware Benchmarks:**
+        - Healthy: 5-10 minutes
+        - Acceptable: 10-20 minutes
+        - Warning (over-analysis): >20 minutes
+
+        If consistently >20 minutes, you may be ruminating rather than learning.
+
+    by_stage:
+      type: object
+      additionalProperties:
+        type: integer
+      description: |
+        Failures grouped by stage they occurred.
+        High concentration at one stage indicates specific gap.
+      example:
+        "Resume screen": 2
+        "Phone screen": 3
+        "Technical interview": 8
+        "Final round": 2
+
+    recurring_themes:
+      type: array
+      items:
+        type: object
+        properties:
+          theme:
+            type: string
+          occurrence_count:
+            type: integer
+          recommended_intervention:
+            type: string
+      description: Patterns detected across multiple failures
+      example:
+        - theme: "System design depth"
+          occurrence_count: 4
+          recommended_intervention: "Structured system design practice (mock interviews, courses)"
+        - theme: "Nervousness in whiteboard settings"
+          occurrence_count: 3
+          recommended_intervention: "Exposure therapy - more low-stakes practice"
+
+    immunity_progress:
+      type: object
+      properties:
+        total_exposures:
+          type: integer
+          description: How many failures have been processed
+        average_recovery_time:
+          type: string
+          enum: [hours, days, weeks]
+        trend:
+          type: string
+          enum: [improving, stable, declining]
+          description: Is recovery getting faster?
+
+    failure_rate_by_period:
+      type: object
+      description: Track failure rate over time
+      additionalProperties:
+        type: number
+      example:
+        "2025-W01": 3
+        "2025-W02": 2
+        "2025-W03": 1
+
+  x-ai-instructions: |
+    Use pattern analysis to guide coaching:
+
+    ## Priority Checks (in order)
+
+    1. **Misalignment Ratio Check (FIRST)**:
+       - If misalignment_ratio > 0.40: "Half your 'failures' aren't failures at all - they're successful filtering. Let's refine your targeting criteria instead of 'fixing' yourself."
+       - This is the most important insight - prevents wasted self-improvement on targeting problems
+
+    2. **Processing Time Check (ADHD-aware)**:
+       - If average_processing_time > 20 min: "You're spending a lot of time analyzing failures. Remember: once insight extracted + action defined = done. Let's practice shorter processing."
+       - Celebrate quick processing: "Nice - you're processing failures efficiently and moving forward."
+
+    3. **Stage Concentration**:
+       - High concentration at one stage? "Let's focus practice on [stage]"
+
+    4. **Pattern Detection**:
+       - Recurring theme? "This theme keeps appearing - time for targeted intervention"
+       - Improving immunity? "You're bouncing back faster - the process is working"
+
+    5. **Type Distribution**:
+       - Many 'weakness' types? "Let's pick ONE weakness to address systematically"
+       - Many 'external' types? "These factors are outside your control - focus energy elsewhere"
+       - Many 'growth_opportunity'? "You're stretching appropriately - that's healthy failure"
+
+    ## ADHD-Specific Coaching
+    - Celebrate Bias to Action when you see quick recovery times
+    - Flag rumination patterns (high processing time, revisiting completed failures)
+    - Reinforce "good enough" standard for analysis
+
+  x-ai-examples:
+    - scenario: "Pattern shows 6 failures at 'Technical Interview' stage"
+      coaching_response: |
+        I see a clear pattern: 6 of your rejections are at the technical interview stage.
+
+        This is actually good news - it tells us exactly where to focus:
+        1. Resume/phone screens are working (you're getting to technical rounds)
+        2. The gap is in technical interview performance specifically
+
+        Recommended intervention:
+        - Schedule 3-5 mock technical interviews (pramp, interviewing.io)
+        - Record yourself and review
+        - Target the specific type (coding vs system design)
+
+    - scenario: "High misalignment ratio (>40%)"
+      metrics:
+        total_failures_logged: 12
+        by_type:
+          screwup: 1
+          weakness: 2
+          growth_opportunity: 2
+          external: 1
+          misalignment: 6
+        misalignment_ratio: 0.50
+        average_processing_time_minutes: 8
+      coaching_response: |
+        I notice something important: 50% of your "failures" are actually misalignment.
+
+        **This changes the diagnosis entirely.**
+
+        You're not failing at opportunities - you're applying to the wrong ones.
+        The rejection process is actually WORKING - it's filtering out bad fits.
+
+        Let's reframe:
+        - You didn't fail 6 times - you successfully filtered 6 mismatches
+        - The problem isn't your skills - it's your targeting criteria
+
+        Action: Let's review what these 6 misalignments had in common:
+        - Culture type? (startup vs enterprise, remote vs RTO)
+        - Role requirements? (individual contributor vs leadership path)
+        - Work style? (fast-paced vs methodical, autonomous vs collaborative)
+
+        Refine your criteria to filter BEFORE applying, not after interviewing.
+
+    - scenario: "High processing time indicating rumination"
+      metrics:
+        average_processing_time_minutes: 35
+        total_failures_logged: 8
+      coaching_response: |
+        I'm noticing you're spending an average of 35 minutes processing each failure.
+
+        For someone with an analytical mind, this is a common pattern - but it's
+        actually slowing you down. Here's why:
+
+        **The "Good Enough" Standard:**
+        Once you've extracted the insight and defined an action, you're done.
+        Additional analysis is rumination, not learning.
+
+        **ADHD-Friendly Benchmarks:**
+        - Target: 5-10 minutes per failure
+        - Maximum: 20 minutes for complex situations
+        - You're at: 35 minutes (75% over the max)
+
+        Your Bias to Action is a strength - let's use it. After 10 minutes of
+        analysis, ask: "Do I have an insight? Do I have an action?" If yes, you're
+        done. Mark it complete and move forward.
+
+        I'll help you time-box future failure processing to 10 minutes.
+
+FailureImmunityProtocol:
+  type: object
+  description: |
+    Structured approach to building failure immunity.
+    Progressive exposure + reflection = resilience.
+  x-immunity-building:
+    principles:
+      - name: "Failures are data"
+        application: "Log every failure without judgment"
+      - name: "Speed of logging matters"
+        application: "Log within 24 hours while details are fresh"
+      - name: "Categorization prevents rumination"
+        application: "Put failures in boxes, then close the box"
+      - name: "One insight per failure"
+        application: "Extract value, then move on"
+      - name: "Exposure builds tolerance"
+        application: "Each failure reduces the sting of the next"
+    weekly_review:
+      questions:
+        - "How many failures did I log this week?"
+        - "What types dominated?"
+        - "Did I extract actionable insights?"
+        - "Am I seeing patterns?"
+        - "Is my recovery time improving?"
+    intervention_triggers:
+      - condition: "Same failure type 3+ times"
+        action: "Create dedicated hypothesis and prototype"
+      - condition: "No failures logged in active campaign"
+        action: "Are you avoiding risk? Failure rate should be > 0"
+      - condition: "Recovery time increasing"
+        action: "Check for burnout, consider Season adjustment"
+
+# ============================================
+# Personalized Failure Examples for Swagger UI
+# ============================================
+
+FailureLogExamples:
+  type: object
+  description: Realistic failure examples across all failure types
+  examples:
+    screwup:
+      summary: "Simple Mistake - Timezone Error"
+      description: "Avoidable error that can be fixed with better process"
+      value:
+        id: "f1234567-89ab-cdef-0123-456789abcdef"
+        title: "Showed up 10 minutes late to Hooli phone screen"
+        failure_type: screwup
+        description: "Had the wrong time zone for the call. Interviewer waited but started rushed."
+        occurred_at: "2025-01-10T14:00:00Z"
+        life_area: work
+        insight: "Always confirm time zone explicitly. Add buffer time before calls."
+        action_items:
+          - action: "Add 15-minute buffer before all interviews"
+            status: completed
+          - action: "Double-check time zone in calendar invite"
+            status: completed
+        emotional_response:
+          initial_feeling: [embarrassed, frustrated]
+          intensity: 6
+        pattern_indicator: false
+        immunity_contribution:
+          exposure_type: first_time
+          recovery_time: hours
+    weakness:
+      summary: "Recurring Pattern - System Design Gaps"
+      description: "Skill gap that keeps appearing across multiple interviews"
+      value:
+        id: "f2345678-9abc-def0-1234-56789abcdef0"
+        title: "Froze during system design question"
+        failure_type: weakness
+        description: |
+          Got asked about designing a real-time bidding system.
+          Knew the concepts but couldn't structure my thinking under pressure.
+          Feedback: "Didn't demonstrate depth in distributed systems."
+        occurred_at: "2025-01-15T10:00:00Z"
+        life_area: work
+        insight: "Need structured approach to system design communication, not just knowledge."
+        pattern_indicator: true
+        action_items:
+          - action: "Complete 10 mock system design interviews"
+            deadline: "2025-02-15"
+            status: in_progress
+          - action: "Use RADIO framework consistently"
+            status: in_progress
+        emotional_response:
+          initial_feeling: [frustrated, disappointed]
+          intensity: 7
+          processing_notes: "This keeps happening. Need to address systematically."
+        immunity_contribution:
+          exposure_type: familiar
+          recovery_time: days
+    growth_opportunity:
+      summary: "Stretch Goal - Principal Level Attempt"
+      description: "Applied above current level, learned what's needed"
+      value:
+        id: "f3456789-abcd-ef01-2345-6789abcdef01"
+        title: "Applied to Principal Engineer role - rejected after onsite"
+        failure_type: growth_opportunity
+        description: |
+          Applied to a role one level above target. Got to onsite.
+          Feedback: "Strong technical skills, needs more organizational leadership examples."
+        occurred_at: "2025-01-20T16:00:00Z"
+        life_area: work
+        insight: "Now I know exactly what's needed for Principal level. Can work toward it."
+        reframe_opportunity: "This wasn't failure - it was valuable reconnaissance."
+        emotional_response:
+          initial_feeling: [disappointed, motivated]
+          intensity: 5
+        immunity_contribution:
+          exposure_type: first_time
+          recovery_time: hours
+    external:
+      summary: "Outside Control - Hiring Freeze"
+      description: "Company decision unrelated to candidate performance"
+      value:
+        id: "f456789a-bcde-f012-3456-789abcdef012"
+        title: "Role cancelled due to hiring freeze"
+        failure_type: external
+        description: |
+          Was in final round. Role cancelled mid-process due to company-wide freeze.
+          Recruiter confirmed nothing to do with my performance.
+        occurred_at: "2025-01-25T09:00:00Z"
+        life_area: work
+        insight: "External factors happen. Can't control company decisions."
+        emotional_response:
+          initial_feeling: [disappointed, relieved]
+          intensity: 4
+        pattern_indicator: false
+        immunity_contribution:
+          exposure_type: familiar
+          recovery_time: hours
+    misalignment:
+      summary: "Dodged a Bullet - RTO Requirement"
+      description: "Rejection that saved from a bad fit"
+      value:
+        id: "f56789ab-cdef-0123-4567-89abcdef0123"
+        title: "Rejected from company requiring 5 days in-office"
+        failure_type: misalignment
+        description: |
+          Got to final round. They revealed full RTO requirement.
+          I withdrew, but they also passed.
+        occurred_at: "2025-01-28T11:00:00Z"
+        life_area: work
+        insight: "This 'rejection' saved me from a bad fit. Remote-first is non-negotiable."
+        reframe_opportunity: "The process worked - filtered out a mismatch."
+        emotional_response:
+          initial_feeling: [relieved]
+          intensity: 2
+        immunity_contribution:
+          exposure_type: routine
+          recovery_time: hours
+
+    # ============================================
+    # Restaurant Industry Examples (The Bear)
+    # ============================================
+    restaurant_screwup:
+      summary: "The Bear - Forgot the Focaccia"
+      description: "Simple mistake during service rush"
+      value:
+        id: "f-bear-001"
+        title: "Forgot to fire the focaccia for table 6"
+        failure_type: screwup
+        description: |
+          Friday rush. 47 covers. Focaccia order got lost in the chaos.
+          Table 6 waited 20 extra minutes. My fault - didn't call it out.
+        occurred_at: "2025-01-10T19:30:00Z"
+        life_area: work
+        insight: "Need to implement ticket confirmation calls. 'Fire focaccia, heard!' Out loud, every time."
+        action_items:
+          - action: "Implement verbal confirmation system for all ticket items"
+            status: completed
+          - action: "Add focaccia prep to pre-service checklist"
+            status: completed
+        emotional_response:
+          initial_feeling: [embarrassed, frustrated]
+          intensity: 5
+          processing_notes: "This is exactly the chaos I'm trying to eliminate. Systems prevent screwups."
+        pattern_indicator: false
+        immunity_contribution:
+          exposure_type: first_time
+          recovery_time: hours
+
+    restaurant_weakness:
+      summary: "The Bear - Losing Temper on the Line"
+      description: "Recurring pattern of yelling under pressure"
+      value:
+        id: "f-bear-002"
+        title: "Screamed at Marcus during service"
+        failure_type: weakness
+        description: |
+          Marcus's sauce broke. Instead of helping fix it, I yelled.
+          The whole kitchen went quiet. Sydney gave me that look.
+          This is the third time this month.
+        occurred_at: "2025-01-15T20:00:00Z"
+        life_area: work
+        insight: "I'm becoming the thing I hated in other kitchens. The yelling doesn't make food better - it makes people scared."
+        pattern_indicator: true
+        related_failures: ["f-bear-002b", "f-bear-002c"]
+        action_items:
+          - action: "When I feel the rage coming, step into walk-in for 30 seconds"
+            status: in_progress
+          - action: "Apologize to Marcus directly"
+            status: completed
+          - action: "Talk to someone about this pattern (maybe Dr. Carmy)"
+            status: pending
+        emotional_response:
+          initial_feeling: [embarrassed, angry, sad]
+          intensity: 9
+          processing_notes: "I can hear Mikey's voice telling me to chill. He never yelled. He made people want to do better."
+        immunity_contribution:
+          exposure_type: familiar
+          recovery_time: days
+
+    restaurant_growth_opportunity:
+      summary: "The Bear - Michelin Attempt"
+      description: "Reached for the stars, learned what's needed"
+      value:
+        id: "f-bear-003"
+        title: "Michelin inspector visit - didn't get the star"
+        failure_type: growth_opportunity
+        description: |
+          Word got out that an inspector was coming. We put everything into that service.
+          Food was flawless. But they noticed the chaos - tickets getting lost, front-of-house unpolished.
+          "Excellent food, inconsistent experience."
+        occurred_at: "2025-01-20T21:00:00Z"
+        life_area: work
+        insight: "The food is there. The systems aren't. We're not failing at cooking - we're failing at running a restaurant."
+        reframe_opportunity: "We cooked Michelin-level food. That's real. Now we build the machine to deliver it consistently."
+        emotional_response:
+          initial_feeling: [disappointed, motivated]
+          intensity: 7
+          processing_notes: "This is exactly what we needed to hear. I've been so focused on the food that I forgot the restaurant."
+        action_items:
+          - action: "Implement full service choreography training"
+            deadline: "2025-02-15"
+            status: in_progress
+          - action: "Talk to Richie about front-of-house ownership"
+            status: completed
+        immunity_contribution:
+          exposure_type: first_time
+          recovery_time: hours
+
+    restaurant_misalignment:
+      summary: "The Bear - Investor Wanted Chain Expansion"
+      description: "Walked away from money that would have compromised vision"
+      value:
+        id: "f-bear-004"
+        title: "Investor meeting - walked away from $2M"
+        failure_type: misalignment
+        description: |
+          Investors loved the food, the story, the numbers. They wanted to franchise.
+          Open 10 locations in 2 years. "The Bear" as a brand, not a restaurant.
+          They wanted Mikey's face on a logo next to airports.
+        occurred_at: "2025-01-25T14:00:00Z"
+        life_area: work
+        insight: "This wasn't failure - I said no. They wanted something I don't. The Beef isn't a franchise. It's a place."
+        reframe_opportunity: "Walking away from the wrong money is success, not failure."
+        emotional_response:
+          initial_feeling: [relieved]
+          intensity: 3
+          processing_notes: "For a second I almost said yes because it felt like winning. But Sydney was right - that's not what we're building."
+        immunity_contribution:
+          exposure_type: first_time
+          recovery_time: hours
