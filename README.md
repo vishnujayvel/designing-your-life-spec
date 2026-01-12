@@ -147,9 +147,7 @@ x-ai-instructions: |
 
 **No installation required!** View the full specification rendered as interactive documentation:
 
-[![Docs](https://img.shields.io/badge/📖_View_Docs-GitHub_Pages-blue?style=for-the-badge)](https://yourusername.github.io/designing-your-life-spec/docs/)
-
-> **Note**: Replace `yourusername` with your GitHub username after publishing.
+[![Docs](https://img.shields.io/badge/📖_View_Docs-GitHub_Pages-blue?style=for-the-badge)](https://vishnujayvel.github.io/designing-your-life-spec/)
 
 The spec is served via [GitHub Pages](https://pages.github.com/) using [Redoc](https://github.com/Redocly/redoc) - the same tool used by Stripe, Docker, and other major APIs. You'll see:
 
