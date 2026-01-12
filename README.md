@@ -110,6 +110,8 @@ Throughout this spec, you'll find examples featuring **two people** navigating v
 
 ### The Tech Worker
 
+![Tech Worker at Crossroads](docs/images/tech-worker-crossroads.png)
+
 A software engineer at **Hooli** (the corporate giant) wondering if the grass is greener at **Pied Piper** (the scrappy startup). Their campaign explores:
 - *"Would I thrive in startup chaos or corporate stability?"*
 - *"Is remote work actually better for my productivity?"*
@@ -118,6 +120,8 @@ A software engineer at **Hooli** (the corporate giant) wondering if the grass is
 Prototypes include coffee chats with startup CTOs, hackathon weekends, and shadowing sessions.
 
 ### Carmy Berzatto (The Bear)
+
+![Chef at The Original Beef](docs/images/chef-transformation.png)
 
 A fine dining chef who returns to Chicago to run his late brother's Italian beef sandwich shop, **The Original Beef of Chicagoland**. Inspired by the TV show "The Bear," his campaign explores:
 - *"Can fine dining techniques transform a sandwich shop without losing its soul?"*
