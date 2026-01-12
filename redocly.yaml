@@ -1,0 +1,6 @@
+# Redocly configuration
+# Allow unused components (they're kept for future use)
+
+rules:
+  no-unused-components: warn
+
