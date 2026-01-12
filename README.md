@@ -1,14 +1,16 @@
 # Designing Your Life - OpenAPI Specification
 
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1-green?style=for-the-badge)](https://spec.openapis.org/oas/v3.1.0)
+[![Docs](https://img.shields.io/badge/View_Docs-GitHub_Pages-blue?style=for-the-badge)](https://vishnujayvel.github.io/designing-your-life-spec/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
-[![DYL](https://img.shields.io/badge/Based%20on-Designing%20Your%20Life-orange?style=for-the-badge)](https://designingyour.life/)
 
 > A language-agnostic OpenAPI specification for implementing the "Designing Your Life" methodology as software.
 
-## What is this?
+## About This Project
 
-This specification encodes the [Designing Your Life](https://designingyour.life/) framework by Bill Burnett and Dave Evans into machine-readable contracts. It's designed for:
+This OpenAPI specification encodes the [Designing Your Life](https://designingyour.life/) framework into machine-readable contracts. The DYL methodology was created by **Bill Burnett** and **Dave Evans** at Stanford's Life Design Lab. This specification was created by **[Vishnu Jayavel](https://github.com/vishnujayvel)** to make the framework accessible to software developers and AI agents.
+
+### Who is this for?
 
 - **AI Agents** (Claude, GPT) - Build life coaching chatbots with methodology-aware behavior
 - **Developers** - Create apps for career transitions, goal tracking, and life design
@@ -151,37 +153,14 @@ x-ai-instructions: |
 
 **No installation required!** View the full specification rendered as interactive documentation:
 
-[![Docs](https://img.shields.io/badge/📖_View_Docs-GitHub_Pages-blue?style=for-the-badge)](https://vishnujayvel.github.io/designing-your-life-spec/)
+[![Docs](https://img.shields.io/badge/View_Docs-GitHub_Pages-blue?style=for-the-badge)](https://vishnujayvel.github.io/designing-your-life-spec/)
 
-The spec is served via [GitHub Pages](https://pages.github.com/) using [Redoc](https://github.com/Redocly/redoc) - the same tool used by Stripe, Docker, and other major APIs. You'll see:
+The spec is served via [GitHub Pages](https://pages.github.com/) using [Redoc](https://github.com/Redocly/redoc). You'll see:
 
 - **Three-panel layout** - Navigation, content, and code examples
 - **Interactive schemas** - Expand nested objects, see constraints
 - **Try it examples** - Request/response patterns for each endpoint
 - **Search** - Find any entity or property instantly
-
-> GitHub renders YAML files as raw text. The HTML documentation gives you the full experience with syntax highlighting, entity diagrams, and AI instruction blocks.
-
-### GitHub Pages Setup
-
-Docs are **automatically rebuilt** when you push changes to the spec!
-
-**First-time setup:**
-1. Go to your repo's **Settings** → **Pages**
-2. Under "Source", select **GitHub Actions**
-3. That's it! The workflow handles the rest.
-
-**How it works:**
-- `.github/workflows/docs.yml` triggers on changes to `*.yaml` files
-- Validates the spec with `redocly lint`
-- Rebuilds `docs/redoc.html` with `redocly build-docs`
-- Deploys to GitHub Pages automatically
-
-**Manual rebuild:** Go to **Actions** tab → **Build & Deploy Docs** → **Run workflow**
-
-The `docs/` folder contains:
-- `index.html` - Redirects to the rendered spec
-- `redoc.html` - Pre-built 543KB static HTML (works offline too!)
 
 ## Quick Start (Local Development)
 
@@ -195,7 +174,6 @@ redocly build-docs dyl-spec.yaml -o docs/redoc.html
 
 # Or use Python's built-in server
 cd docs && python -m http.server 8080
-# Opens http://localhost:8080
 ```
 
 ### Validate
@@ -245,7 +223,7 @@ The spec includes rules for detecting common pitfalls:
 | **Premature Commitment** | Major decision without evidence | Require min 3 evidence entries |
 | **Cognitive Bandwidth** | >7 open loops | Encourage closure or parking |
 
-## Learn More
+## Learn More About DYL
 
 ### Official Resources
 - [Designing Your Life Book](https://www.amazon.com/Designing-Your-Life-Well-Lived-Joyful/dp/1101875321)
@@ -253,18 +231,18 @@ The spec includes rules for detecting common pitfalls:
 - [Stanford Life Design Lab](http://lifedesignlab.stanford.edu/resources)
 - [Online Course (CreativeLive)](https://www.creativelive.com/class/designing-your-life-how-to-build-a-well-lived-joyful-life-bill-burnett-dave-evans)
 
-### About the Authors
+### About the DYL Framework Authors
 **Bill Burnett** - Executive Director of Stanford's Design Program
 **Dave Evans** - Adjunct Lecturer at Stanford, co-founder of Electronic Arts
 
 ## Contributing
 
-This spec evolved through deep research cycles with Gemini and ChatGPT. Contributions welcome:
+Contributions welcome! You can help by:
 
-- Add new prototype types
-- Improve anti-pattern detection rules
-- Add provider mappings (Notion, Linear, etc.)
-- Translate examples to other domains
+- Adding new prototype types
+- Improving anti-pattern detection rules
+- Adding provider mappings (Notion, Linear, etc.)
+- Translating examples to other domains
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
